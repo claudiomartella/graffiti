@@ -10,6 +10,6 @@ public class Filter extends Condition {
 	}
 	
 	public String toString() {
-		return function + argument + ")";
+		return function + "(" + argument + ")";
 	}
 }

@@ -34,7 +34,7 @@ public class LocationStep {
 		else
 			string = "<no edge>";
 		
-		string += Joiner.on(" | ").skipNulls().join(conditions);
+		string += " " + Joiner.on(" | ").skipNulls().join(conditions);
 		
 		if (repeat != -1) {
 			string += " (";

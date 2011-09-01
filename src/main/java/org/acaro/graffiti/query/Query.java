@@ -44,7 +44,7 @@ public class Query {
 	}
 	
 	public String toString() {
-		String string = startNode + ":: " + Joiner.on(" > ").skipNulls().join(locationSteps);
+		String string = startNode + " :: " + Joiner.on(" > ").skipNulls().join(locationSteps);
 		if (enf != null)
 			string = string + enf;
 		

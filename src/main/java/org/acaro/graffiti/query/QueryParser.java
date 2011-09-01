@@ -99,13 +99,13 @@ public class QueryParser {
 			}	
 			case RDFPathLexer.CONDITION:
 			{	
-				CommonTree conditionTree = (CommonTree) ast.getChild(0);
+				CommonTree conditionTree = (CommonTree) treeChild.getChild(0);
 				
 				switch (conditionTree.getType()) {
 
 				case RDFPathLexer.FILTER:
 				{	
-					CommonTree filterFunction = (CommonTree) treeChild.getChild(0);
+					CommonTree filterFunction = (CommonTree) conditionTree.getChild(0);
 					String function = filterFunction.getChild(0).getText();
 					String argument = filterFunction.getChild(1).getText();
 					
@@ -114,10 +114,10 @@ public class QueryParser {
 				}	
 				case RDFPathLexer.SUBQUERY:
 				{	
-					CommonTree filterFunction = (CommonTree) treeChild.getChild(1);
+					CommonTree filterFunction = (CommonTree) conditionTree.getChild(1);
 					String function = filterFunction.getChild(0).getText();
 					String argument = filterFunction.getChild(1).getText();
-					String edge     = treeChild.getChild(0).getChild(0).getText();
+					String edge     = conditionTree.getChild(0).getChild(0).getText();
 
 					// subqueries are actually executed by the next vertex
 					if (next == null)
