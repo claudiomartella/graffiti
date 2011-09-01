@@ -3,10 +3,12 @@ package org.acaro.graffiti.query;
 public class EndNodeFunction {
 	public enum FUNCTION { MIN, MAX, COUNT, AVG, SUM, DISTANCE };
 	private FUNCTION func;
+	private String f;
 	private String argument;
 	
 	public EndNodeFunction(String f) {
-		func = parseFunction(f);
+		this.func = parseFunction(f);
+		this.f    = f;
 	}
 	
 	public EndNodeFunction(String func, String argument) {
@@ -29,5 +31,17 @@ public class EndNodeFunction {
 			return FUNCTION.DISTANCE;
 		else
 			throw new ParseError("Unknown EndNodeFunction " + func);
+	}
+	
+	public String toString() {
+		String string = ". ";
+
+		string += this.f;
+		if (argument != null)
+			string += argument;
+		
+		string += ")";
+		
+		return string;
 	}
 }
