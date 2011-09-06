@@ -74,8 +74,11 @@ public class Query implements Writable {
 		}
 		setLocationSteps(locationSteps);
 		setStartNode(input.readUTF());
-		
-		
+		if (input.readBoolean() == true) {
+			EndNodeFunction enf = new EndNodeFunction();
+			enf.readFields(input);
+			setEndNodeFunction(enf);
+		}
 	}
 
 	@Override
@@ -83,5 +86,12 @@ public class Query implements Writable {
 		output.writeInt(locationSteps.size());
 		for (LocationStep l: getLocationSteps())
 			l.write(output);
+		
+		output.writeUTF(getStartNode());
+		if (enf != null) {
+			output.writeBoolean(true);
+			enf.write(output);
+		} else 
+			output.writeBoolean(false);
 	}
 }

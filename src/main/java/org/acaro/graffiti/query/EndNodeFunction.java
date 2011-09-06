@@ -1,14 +1,20 @@
 package org.acaro.graffiti.query;
 
-public class EndNodeFunction {
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import org.apache.hadoop.io.Writable;
+
+public class EndNodeFunction implements Writable {
 	public enum FUNCTION { MIN, MAX, COUNT, AVG, SUM, DISTANCE };
-	private FUNCTION func;
-	private String f;
+	private FUNCTION function;
 	private String argument;
 	
+	public EndNodeFunction() { }
+	
 	public EndNodeFunction(String f) {
-		this.func = parseFunction(f);
-		this.f    = f;
+		this.function = parseFunction(f);
 	}
 	
 	public EndNodeFunction(String func, String argument) {
@@ -36,12 +42,27 @@ public class EndNodeFunction {
 	public String toString() {
 		StringBuffer string = new StringBuffer(". ");
 		
-		string.append(this.f);
+		string.append(this.function.name());
+		string.append("(");
 		if (argument != null)
 			string.append(argument);
 		
 		string.append(")");
 		
 		return string.toString();
+	}
+
+	@Override
+	public void readFields(DataInput input) throws IOException {
+		function = FUNCTION.values()[input.readInt()];
+		if (function == FUNCTION.DISTANCE)
+			argument = input.readUTF();
+	}
+
+	@Override
+	public void write(DataOutput output) throws IOException {
+		output.writeInt(function.ordinal());
+		if (argument != null)
+			output.writeUTF(argument);
 	}
 }
