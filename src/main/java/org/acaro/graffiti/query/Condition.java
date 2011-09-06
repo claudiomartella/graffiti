@@ -1,7 +1,10 @@
 package org.acaro.graffiti.query;
 
-public abstract class Condition {
+import org.apache.hadoop.io.Writable;
+
+public abstract class Condition implements Writable {
 	public enum FUNCTION { MIN, MAX, EQUALS, PREFIX, SUFFIX };
+	public enum TYPE { SUBQUERY, FILTER };
 
 	protected FUNCTION parseFunction(String func) {
 		if (func.equals("MIN("))

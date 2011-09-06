@@ -34,14 +34,14 @@ public class EndNodeFunction {
 	}
 	
 	public String toString() {
-		String string = ". ";
-
-		string += this.f;
+		StringBuffer string = new StringBuffer(". ");
+		
+		string.append(this.f);
 		if (argument != null)
-			string += argument;
+			string.append(argument);
 		
-		string += ")";
+		string.append(")");
 		
-		return string;
+		return string.toString();
 	}
 }

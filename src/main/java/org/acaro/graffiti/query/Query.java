@@ -1,13 +1,21 @@
 package org.acaro.graffiti.query;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.hadoop.io.Writable;
 
 import com.google.common.base.Joiner;
 
-public class Query {
+public class Query implements Writable {
 	private List<LocationStep> locationSteps;
 	private EndNodeFunction enf;
 	private String startNode;
+	
+	public Query() { }
 	
 	public Query(String startNode, List<LocationStep> locationSteps) {
 		setStartNode(startNode);
@@ -44,10 +52,36 @@ public class Query {
 	}
 	
 	public String toString() {
-		String string = startNode + " :: " + Joiner.on(" > ").skipNulls().join(locationSteps);
-		if (enf != null)
-			string = string + enf;
+		StringBuffer string = new StringBuffer(startNode);
 		
-		return string;
+		string.append(" :: ");
+		string.append(Joiner.on(" > ").skipNulls().join(locationSteps));
+		if (enf != null)
+			string.append(enf);
+		
+		return string.toString();
+	}
+
+	@Override
+	public void readFields(DataInput input) throws IOException {
+		ArrayList<LocationStep> locationSteps = new ArrayList<LocationStep>();
+		
+		int n = input.readInt();
+		for (int i = 0; i < n; i++) {
+			LocationStep l = new LocationStep();
+			l.readFields(input);
+			locationSteps.add(l);
+		}
+		setLocationSteps(locationSteps);
+		setStartNode(input.readUTF());
+		
+		
+	}
+
+	@Override
+	public void write(DataOutput output) throws IOException {
+		output.writeInt(locationSteps.size());
+		for (LocationStep l: getLocationSteps())
+			l.write(output);
 	}
 }
