@@ -46,6 +46,7 @@ public class LocationStep implements Writable {
 			string.append(" (");
 			if (isSP)
 				string.append("*");
+			string.append(repeat);
 			string.append(")");
 		}
 		
@@ -67,19 +68,18 @@ public class LocationStep implements Writable {
 			case FILTER:
 			{
 				c = new Filter();
-				c.readFields(input);
 				break;
 			}	
 			case SUBQUERY:
 			{
 				c = new Subquery();
-				c.readFields(input);
 				break;
 			}
 			default:
 				throw new RuntimeException("Unknown Condition type at readFields!");
 			}
-			
+
+			c.readFields(input);
 			conditions.add(c);
 		}
 	}

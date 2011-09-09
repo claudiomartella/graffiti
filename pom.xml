@@ -54,6 +54,11 @@
 			<artifactId>antlr</artifactId>
 			<version>3.3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.giraph</groupId>
+			<artifactId>giraph</artifactId>
+			<version>0.70</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
