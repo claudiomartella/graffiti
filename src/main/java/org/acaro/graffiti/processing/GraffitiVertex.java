@@ -3,6 +3,7 @@ package org.acaro.graffiti.processing;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.acaro.graffiti.query.LocationStep;
 import org.acaro.graffiti.query.Query;
 import org.acaro.graffiti.query.QueryParser;
 import org.antlr.runtime.RecognitionException;
@@ -15,10 +16,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
 
+import ch.qos.logback.core.joran.conditional.Condition;
+
 public class GraffitiVertex extends Vertex<Text, IntWritable, Text, Query> implements Tool {
 	
-	private static final String SOURCE_VX = "source_vertex";
-	private static final String QUERY = "query";
+	public static final String SOURCE_VX = "source_vertex";
+	public static final String QUERY = "query";
 	private Configuration conf;
 	
 	@Override
@@ -47,6 +50,11 @@ public class GraffitiVertex extends Vertex<Text, IntWritable, Text, Query> imple
 
 	private void processQuery(Query query) {
 		
+		LocationStep l = query.getLocationSteps().pop();
+		
+		if (l.evaluate(this) == true)
+			l.execute(query, this);
+
 	}
 
 	private boolean isSource() {

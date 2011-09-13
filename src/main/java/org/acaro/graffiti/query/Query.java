@@ -3,26 +3,25 @@ package org.acaro.graffiti.query;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 import org.apache.hadoop.io.Writable;
 
 import com.google.common.base.Joiner;
 
 public class Query implements Writable {
-	private List<LocationStep> locationSteps;
+	private Stack<LocationStep> locationSteps;
 	private EndNodeFunction enf;
 	private String startNode;
 	
 	public Query() { }
 	
-	public Query(String startNode, List<LocationStep> locationSteps) {
+	public Query(String startNode, Stack<LocationStep> locationSteps) {
 		setStartNode(startNode);
 		setLocationSteps(locationSteps);
 	}
 
-	public Query(String startNode, List<LocationStep> locationSteps, EndNodeFunction func) {
+	public Query(String startNode, Stack<LocationStep> locationSteps, EndNodeFunction func) {
 		this(startNode, locationSteps);
 		setEndNodeFunction(func);
 	}
@@ -35,11 +34,11 @@ public class Query implements Writable {
 		return this.startNode;
 	}
 	
-	public void setLocationSteps(List<LocationStep> locationSteps) {
+	public void setLocationSteps(Stack<LocationStep> locationSteps) {
 		this.locationSteps = locationSteps;
 	}
 	
-	public List<LocationStep> getLocationSteps() {
+	public Stack<LocationStep> getLocationSteps() {
 		return this.locationSteps;
 	}
 	
@@ -64,7 +63,7 @@ public class Query implements Writable {
 
 	@Override
 	public void readFields(DataInput input) throws IOException {
-		ArrayList<LocationStep> locationSteps = new ArrayList<LocationStep>();
+		Stack<LocationStep> locationSteps = new Stack<LocationStep>();
 		
 		int n = input.readInt();
 		for (int i = 0; i < n; i++) {

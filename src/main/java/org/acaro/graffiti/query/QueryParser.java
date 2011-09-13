@@ -1,7 +1,6 @@
 package org.acaro.graffiti.query;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Stack;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -36,7 +35,7 @@ public class QueryParser {
 	}
 	
 	private Query parseQuery(CommonTree ast) {
-		List<LocationStep> locationSteps = new ArrayList<LocationStep>();
+		Stack<LocationStep> locationSteps = new Stack<LocationStep>();
 		String startNode     = null;
 		EndNodeFunction func = null;
 		
