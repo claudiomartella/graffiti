@@ -8,8 +8,8 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.CommonTree;
 
 public class QueryParser {
-	private static final String USAGE = "./QueryParser <query>";
-	private String query;
+
+    private String query;
 	private Query q;
 	private LocationStep current, next;
 	
@@ -57,11 +57,12 @@ public class QueryParser {
 			}	
 			case RDFPathLexer.ENDNODEFUNCTION:
 			{	
-				if (treeChild.getChildCount() != 1)
+				if (treeChild.getChildCount() != 1) {
 					func = new EndNodeFunction(treeChild.getChild(0).getText(), 
 							treeChild.getChild(1).getText());
-				else
+				} else {
 					func = new EndNodeFunction(treeChild.getChild(0).getText());
+				}
 				break;
 			}	
 			default:
@@ -69,8 +70,9 @@ public class QueryParser {
 			}
 		}
 		
-		if (next != null)
+		if (next != null) {
 			locationSteps.add(next);
+		}
 		
 		return (func == null) ? new Query(startNode, locationSteps) : 
 			new Query(startNode, locationSteps, func);
@@ -107,8 +109,9 @@ public class QueryParser {
 					CommonTree filterFunction = (CommonTree) conditionTree.getChild(0);
 					String function = filterFunction.getChild(0).getText();
 					String argument = filterFunction.getChild(1).getText();
+					String edge     = current.getEdge();
 					
-					current.addCondition(new Filter(function, argument));
+					current.addCondition(new Subquery(edge, function, argument));
 					break;
 				}	
 				case RDFPathLexer.SUBQUERY:
@@ -119,9 +122,9 @@ public class QueryParser {
 					String edge     = conditionTree.getChild(0).getChild(0).getText();
 
 					// subqueries are actually executed by the next vertex
-					if (next == null)
+					if (next == null) {
 						next = new LocationStep();
-
+					}
 					next.addCondition(new Subquery(edge, function, argument));
 					break;
 				}	

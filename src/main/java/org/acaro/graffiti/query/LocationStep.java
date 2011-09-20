@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.io.Writable;
 
@@ -29,6 +30,22 @@ public class LocationStep implements Writable {
 
 	public void setSP(boolean value) {
 		this.isSP = value;
+	}
+	
+	public String getEdge() {
+		return this.edge;
+	}
+	
+	public List<Condition> getConditions() {
+		return this.conditions;
+	}
+	
+	public int getRepeat() {
+		return this.repeat;
+	}
+	
+	public boolean isSP() {
+		return this.isSP;
 	}
 	
 	public String toString() {

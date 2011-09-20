@@ -1,38 +1,58 @@
 package org.acaro.graffiti.processing;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
+import org.acaro.graffiti.query.Condition;
 import org.acaro.graffiti.query.LocationStep;
 import org.acaro.graffiti.query.Query;
 import org.acaro.graffiti.query.QueryParser;
 import org.antlr.runtime.RecognitionException;
+import org.apache.giraph.graph.BspUtils;
 import org.apache.giraph.graph.GiraphJob;
-import org.apache.giraph.graph.Vertex;
+import org.apache.giraph.graph.MutableVertex;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
+import org.apache.log4j.Logger;
 
-import ch.qos.logback.core.joran.conditional.Condition;
-
-public class GraffitiVertex extends Vertex<Text, IntWritable, Text, Query> implements Tool {
+public class GraffitiVertex 
+    extends MutableVertex<Text, NullWritable, Text, GraffitiMessage> 
+    implements Tool {
 	
 	public static final String SOURCE_VX = "source_vertex";
 	public static final String QUERY = "query";
+    private static final Logger LOG = Logger.getLogger(GraffitiVertex.class);
+	private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
+    private final List<GraffitiMessage> msgList = new ArrayList<GraffitiMessage>();
 	private Configuration conf;
-	
+    private Text vertexId = null;
+    private boolean halt = false;
+    private int numOutEdges; 
+
 	@Override
-	public void compute(Iterator<Query> messages) throws IOException {
+	public void compute(Iterator<GraffitiMessage> messages) throws IOException {
 		
 		if (getSuperstep() == 0 && isSource()) {
-			String query = getQuery();
+			
+		    String query = getQuery();
 
 			try {
 
-				processQuery(new QueryParser(query).parse());
+				processMessage(new GraffitiMessage(new QueryParser(query).parse(),
+				                                   new ResultSet()));
 
 			} catch (RecognitionException e) {
 				System.err.println("impossible to parse: " + query);
@@ -40,21 +60,57 @@ public class GraffitiVertex extends Vertex<Text, IntWritable, Text, Query> imple
 			}
 		} else {
 			
-			while (messages.hasNext())
-				processQuery(messages.next());
-		
+			while (messages.hasNext()) {
+				processMessage(messages.next());
+			}
 		}
 		
 		voteToHalt();
 	}
 
-	private void processQuery(Query query) {
+	private void processMessage(GraffitiMessage message) {
 		
-		LocationStep l = query.getLocationSteps().pop();
+		Query query = message.getQuery();
+	    LocationStep l = query.getLocationSteps().pop();
 		
-		if (l.evaluate(this) == true)
-			l.execute(query, this);
+		// 1- check all the conditions
+		for (Condition c: l.getConditions()) {
+			if (c.evaluate(this) == false) {
+				return;
+			}
+		}
+		
+		// 2- check if we have to repeat this locationStep
+		int rp = l.getRepeat();
+		if (rp > 0) {
+			l.setRepeat(--rp);
+			query.getLocationSteps().push(l);
+		}
 
+		// 3- forward the query through the right edge(s)
+		Text label = new Text(l.getEdge());
+		if (label.equals("*")) {
+		    for (Text lbl: getEdgesLabels()) {
+		        GraffitiMessage cloned = message.clone();
+		        cloned.getResults().push(lbl);
+		        cloned.getResults().push(getVertexId());
+
+		        Set<Text> edges = labelledOutEdgeMap.get(lbl);
+		        for (Text v: edges) {
+		            sendMsg(v, cloned.clone());
+		        }
+		    }
+		} else {
+		    message.getResults().push(label);
+		    message.getResults().push(getVertexId());
+		    
+		    Set<Text> edges = labelledOutEdgeMap.get(label);
+		    if (edges != null) { 
+		        for (Text v: edges) {
+		            sendMsg(v, message.clone());
+		        }
+		    }
+		}		
 	}
 
 	private boolean isSource() {
@@ -66,7 +122,175 @@ public class GraffitiVertex extends Vertex<Text, IntWritable, Text, Query> imple
 	private String getQuery() {
 		return getContext().getConfiguration().get(QUERY);
 	}
+	
+	public Set<Text> getEdgesByLabel(Text label) {
+		return labelledOutEdgeMap.get(label);
+	}
+	
+	public Set<Text> getEdgesLabels() {
+		return labelledOutEdgeMap.keySet();
+	}
+	
+	@Override
+	public void readFields(DataInput in) throws IOException {
+        
+		vertexId = BspUtils.<Text>createVertexIndex(getContext().getConfiguration());
+        vertexId.readFields(in);
 
+        int edgeMapSize = in.readInt();
+        for (int i = 0; i < edgeMapSize; i++) {
+        	Text label = new Text();
+        	label.readFields(in);
+        	int verticesSize = in.readInt();
+        	for (int j = 0; j < verticesSize; j++) {
+        		Text vID = new Text();
+        		vID.readFields(in);
+        		addEdge(vID, label);
+        	}
+        }
+        
+        int msgListSize = in.readInt();
+        for (int i = 0; i < msgListSize; i++) {
+            GraffitiMessage msg = BspUtils.<GraffitiMessage>createMessageValue(getContext().getConfiguration());
+            msg.readFields(in);
+            msgList.add(msg);
+        }
+        
+        halt = in.readBoolean();
+	}
+
+	@Override
+	public void write(DataOutput out) throws IOException {
+       
+		vertexId.write(out);
+
+        out.writeInt(labelledOutEdgeMap.size());
+        for (Entry<Text, Set<Text>> label: labelledOutEdgeMap.entrySet()) {
+        	label.getKey().write(out);
+        	out.writeInt(label.getValue().size());
+        	for (Text dest: label.getValue()) {
+        		dest.write(out);
+        	}
+        }
+        
+        out.writeInt(msgList.size());
+        for (GraffitiMessage msg : msgList) {
+            msg.write(out);
+        }
+        
+        out.writeBoolean(halt);
+	}
+
+	@Override
+	public boolean addEdge(Text vID, Text label) {
+
+		Set<Text> set = labelledOutEdgeMap.get(label);
+		if (set == null) {
+			set = new TreeSet<Text>();
+			labelledOutEdgeMap.put(label, set);
+		}
+		
+		boolean ret = set.add(vID);
+		if (ret == true) {
+			numOutEdges++;
+		}
+		
+		return ret;
+	}
+
+	@Override
+	public Text removeEdge(Text vID) {
+		throw new UnsupportedOperationException("removeEdge should not be called");
+	}
+
+	@Override
+	public void setVertexId(Text vID) {
+		this.vertexId = vID;
+	}
+
+	@Override
+	public Text getEdgeValue(Text vID) {
+		throw new UnsupportedOperationException("getEdgeValue should not be called");
+	}
+
+	@Override
+	public List<GraffitiMessage> getMsgList() {
+		return this.msgList;
+	}
+
+	@Override
+	public int getNumOutEdges() {
+		return this.numOutEdges;
+	}
+
+	@Override
+	public Text getVertexId() {
+		return this.vertexId;
+	}
+
+	@Override
+	public NullWritable getVertexValue() {
+		return NullWritable.get();
+	}
+
+	@Override
+	public boolean hasEdge(Text vID) {
+		throw new UnsupportedOperationException("hasEdge should not be called");
+	}
+
+	@Override
+	public boolean isHalted() {
+		return this.halt;
+	}
+
+	@Override
+	public Iterator<Text> iterator() {
+		throw new UnsupportedOperationException("iterator should not be called");
+	}
+	
+	@Override
+	public void postApplication() {
+		// Don't need this
+	}
+
+	@Override
+	public void postSuperstep() {
+		// Don't need this
+	}
+
+	@Override
+	public void preApplication() throws InstantiationException,
+			IllegalAccessException {
+		// Don't need this
+	}
+
+	@Override
+	public void preSuperstep() {
+		// Don't need this	
+	}
+
+	@Override
+	public void sendMsgToAllEdges(GraffitiMessage m) {
+		for (Set<Text> labelSet: labelledOutEdgeMap.values()) {
+			for (Text v: labelSet) {
+				sendMsg(v, m);
+			}
+		}
+	}
+
+	@Override
+	public void setVertexValue(NullWritable value) {
+		// ignore it, we don't have a vertex value
+	}
+
+	@Override
+	public void voteToHalt() {
+		this.halt = true;
+	}
+	
+	/*
+	 * This is all Tool stuff
+	 */
 	@Override
 	public Configuration getConf() {
 		return this.conf;

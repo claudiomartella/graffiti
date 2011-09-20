@@ -9,8 +9,10 @@ import org.apache.hadoop.io.Writable;
 
 import com.google.common.base.Joiner;
 
-public class Query implements Writable {
-	private Stack<LocationStep> locationSteps;
+public class Query 
+    implements Writable, Cloneable {
+ 
+    private Stack<LocationStep> locationSteps;
 	private EndNodeFunction enf;
 	private String startNode;
 	
@@ -55,8 +57,9 @@ public class Query implements Writable {
 		
 		string.append(" :: ");
 		string.append(Joiner.on(" > ").skipNulls().join(locationSteps));
-		if (enf != null)
+		if (enf != null) {
 			string.append(enf);
+		}
 		
 		return string.toString();
 	}
@@ -71,6 +74,7 @@ public class Query implements Writable {
 			l.readFields(input);
 			locationSteps.add(l);
 		}
+
 		setLocationSteps(locationSteps);
 		setStartNode(input.readUTF());
 		if (input.readBoolean() == true) {
@@ -83,14 +87,28 @@ public class Query implements Writable {
 	@Override
 	public void write(DataOutput output) throws IOException {
 		output.writeInt(locationSteps.size());
-		for (LocationStep l: getLocationSteps())
+		for (LocationStep l: getLocationSteps()) {
 			l.write(output);
+		}
 		
 		output.writeUTF(getStartNode());
 		if (enf != null) {
 			output.writeBoolean(true);
 			enf.write(output);
-		} else 
+		} else { 
 			output.writeBoolean(false);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+    @Override
+	public Query clone() {
+        Query clonedQuery = (enf == null) 
+            ? new Query(startNode, locationSteps) 
+            : new Query(startNode, locationSteps, enf);
+        
+        clonedQuery.locationSteps = (Stack<LocationStep>) locationSteps.clone();
+            
+        return clonedQuery;
 	}
 }
