@@ -11,8 +11,8 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-public class GraffitiVertexReader extends
-	TextVertexReader<Text, NullWritable, Text> {
+public class GraffitiVertexReader 
+    extends TextVertexReader<Text, NullWritable, Text> {
 
 	public GraffitiVertexReader(RecordReader<LongWritable, Text> arg) {
 		super(arg);

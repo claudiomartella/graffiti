@@ -48,9 +48,7 @@ public class GraffitiVertex
 		if (getSuperstep() == 0 && isSource()) {
 			
 		    String query = getQuery();
-
 			try {
-
 				processMessage(new GraffitiMessage(new QueryParser(query).parse(),
 				                                   new ResultSet()));
 
@@ -59,7 +57,6 @@ public class GraffitiVertex
 				e.printStackTrace();
 			}
 		} else {
-			
 			while (messages.hasNext()) {
 				processMessage(messages.next());
 			}
@@ -88,31 +85,27 @@ public class GraffitiVertex
 		}
 
 		// 3- forward the query through the right edge(s)
-		Text label = new Text(l.getEdge());
-		if (label.equals("*")) {
-		    for (Text lbl: getEdgesLabels()) {
-		        GraffitiMessage cloned = message.clone();
-		        cloned.getResults().push(lbl);
-		        cloned.getResults().push(getVertexId());
-
-		        Set<Text> edges = labelledOutEdgeMap.get(lbl);
-		        for (Text v: edges) {
-		            sendMsg(v, cloned.clone());
-		        }
+		if (l.getEdge().equals("*")) {
+		    for (Text label: getEdgesLabels()) {
+		        forwardMsgThroughLabel(label, message.clone());
 		    }
 		} else {
-		    message.getResults().push(label);
-		    message.getResults().push(getVertexId());
-		    
-		    Set<Text> edges = labelledOutEdgeMap.get(label);
-		    if (edges != null) { 
-		        for (Text v: edges) {
-		            sendMsg(v, message.clone());
-		        }
-		    }
+		    forwardMsgThroughLabel(new Text(l.getEdge()), message);
 		}		
 	}
 
+	private void forwardMsgThroughLabel(Text label, GraffitiMessage message) {
+	    message.getResults().push(getVertexId());
+	    message.getResults().push(label);
+	    
+	    Set<Text> edges = labelledOutEdgeMap.get(label);
+	    if (edges != null) {
+	        for (Text v: edges) {
+	            sendMsg(v, message.clone());
+	        }
+	    }
+	}
+	
 	private boolean isSource() {
 	    String source = getContext().getConfiguration().get(SOURCE_VX);
 

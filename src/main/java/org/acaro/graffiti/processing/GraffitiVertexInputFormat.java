@@ -9,8 +9,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-public class GraffitiVertexInputFormat extends 
-	TextVertexInputFormat<Text, NullWritable, Text> {
+public class GraffitiVertexInputFormat 
+    extends TextVertexInputFormat<Text, NullWritable, Text> {
 
 	@Override
 	public VertexReader<Text, NullWritable, Text> createVertexReader(

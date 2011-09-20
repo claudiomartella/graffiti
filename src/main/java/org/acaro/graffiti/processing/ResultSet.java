@@ -8,7 +8,8 @@ import java.util.Stack;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
-public class ResultSet implements Writable, Cloneable {
+public class ResultSet 
+    implements Writable, Cloneable {
 
     private Stack<Text> results = new Stack<Text>();    
 

@@ -7,7 +7,8 @@ import java.io.IOException;
 import org.acaro.graffiti.query.Query;
 import org.apache.hadoop.io.Writable;
 
-public class GraffitiMessage implements Writable, Cloneable {
+public class GraffitiMessage 
+    implements Writable, Cloneable {
 
     private Query query;
     private ResultSet results;
