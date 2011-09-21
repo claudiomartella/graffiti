@@ -17,35 +17,51 @@ package org.acaro.graffiti.processing;
 
 import java.io.IOException;
 
+import org.acaro.graffiti.query.ParseError;
+import org.acaro.graffiti.query.Query;
+import org.acaro.graffiti.query.QueryParser;
+import org.antlr.runtime.RecognitionException;
 import org.apache.giraph.graph.MutableVertex;
 import org.apache.giraph.lib.TextVertexInputFormat.TextVertexReader;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.json.JSONArray;
 import org.json.JSONException;
 
 public class GraffitiVertexReader 
-    extends TextVertexReader<Text, NullWritable, Text> {
+    extends TextVertexReader<Text, Query, Text> {
 
+    private Query query;
+    
 	public GraffitiVertexReader(RecordReader<LongWritable, Text> arg) {
 		super(arg);
+
+		try {
+		    
+		    String queryString = getContext().getConfiguration().get(GraffitiVertex.QUERY);
+            this.query = new QueryParser(queryString).parse();
+        
+		} catch (RecognitionException e) {
+            e.printStackTrace();
+            throw new ParseError("cannot parse query ");
+        }
 	}
 
 	@Override
-	public boolean next(MutableVertex<Text, NullWritable, Text, ?> vertex)
+	public boolean next(MutableVertex<Text, Query, Text, ?> vertex)
 		throws IOException, InterruptedException {
 		
-		if (!getRecordReader().nextKeyValue())
+		if (!getRecordReader().nextKeyValue()) {
             return false;
+		}
 		
 		Text line = getRecordReader().getCurrentValue();
 		
 		try {
             JSONArray jsonVertex = new JSONArray(line.toString());
             vertex.setVertexId(new Text(jsonVertex.getString(0)));
-            vertex.setVertexValue(NullWritable.get());
+            vertex.setVertexValue(this.query);
             
             JSONArray jsonEdgeArray = jsonVertex.getJSONArray(2);
             for (int i = 0; i < jsonEdgeArray.length(); ++i) {

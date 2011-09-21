@@ -31,29 +31,38 @@ import org.acaro.graffiti.query.Condition;
 import org.acaro.graffiti.query.LocationStep;
 import org.acaro.graffiti.query.Query;
 import org.acaro.graffiti.query.QueryParser;
-import org.antlr.runtime.RecognitionException;
 import org.apache.giraph.graph.BspUtils;
 import org.apache.giraph.graph.GiraphJob;
 import org.apache.giraph.graph.MutableVertex;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.log4j.Logger;
 
+/*
+ * XXX: can maybe save some clone()s. If we firstElement() instead of pop() before we evaluate
+ * we can basically share the same object UNTIL we modify it. And we modify it ONLY if we are
+ * a matching vertex, before we forward it. So all the non-matching vertices share the same object.
+ */
 public class GraffitiVertex 
-    extends MutableVertex<Text, NullWritable, Text, GraffitiMessage> 
+    extends MutableVertex<Text, Query, Text, GraffitiMessage> 
     implements Tool {
 	
 	public static final String SOURCE_VX = "source_vertex";
 	public static final String QUERY = "query";
     private static final Logger LOG = Logger.getLogger(GraffitiVertex.class);
-	private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
+	/*
+	 * It contains all the outgoing edges. Each entry in the hashmap represents an outgoing label.
+	 * Each element of the contained TreeSet are vertices on the other end of an edge with
+	 * that label.
+	 */
+    private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
     private final List<GraffitiMessage> msgList = new ArrayList<GraffitiMessage>();
 	private Configuration conf;
     private Text vertexId = null;
+    private Query query;
     private boolean halt = false;
     private int numOutEdges; 
 
@@ -61,16 +70,7 @@ public class GraffitiVertex
 	public void compute(Iterator<GraffitiMessage> messages) throws IOException {
 		
 		if (getSuperstep() == 0 && isSource()) {
-			
-		    String query = getQuery();
-			try {
-				processMessage(new GraffitiMessage(new QueryParser(query).parse(),
-				                                   new ResultSet()));
-
-			} catch (RecognitionException e) {
-				System.err.println("impossible to parse: " + query);
-				e.printStackTrace();
-			}
+            processMessage(new GraffitiMessage(this.query.clone(), new ResultSet()));
 		} else {
 			while (messages.hasNext()) {
 				processMessage(messages.next());
@@ -110,6 +110,7 @@ public class GraffitiVertex
 	}
 
 	private void forwardMsgThroughLabel(Text label, GraffitiMessage message) {
+	    
 	    message.getResults().push(getVertexId());
 	    message.getResults().push(label);
 	    
@@ -125,10 +126,6 @@ public class GraffitiVertex
 	    String source = getContext().getConfiguration().get(SOURCE_VX);
 
 	    return source.equals("*") || source.equals(getVertexId());
-	}
-	
-	private String getQuery() {
-		return getContext().getConfiguration().get(QUERY);
 	}
 	
 	public Set<Text> getEdgesByLabel(Text label) {
@@ -159,7 +156,8 @@ public class GraffitiVertex
         
         int msgListSize = in.readInt();
         for (int i = 0; i < msgListSize; i++) {
-            GraffitiMessage msg = BspUtils.<GraffitiMessage>createMessageValue(getContext().getConfiguration());
+            GraffitiMessage msg = BspUtils.<GraffitiMessage>createMessageValue(
+                                                getContext().getConfiguration());
             msg.readFields(in);
             msgList.add(msg);
         }
@@ -237,8 +235,8 @@ public class GraffitiVertex
 	}
 
 	@Override
-	public NullWritable getVertexValue() {
-		return NullWritable.get();
+	public Query getVertexValue() {
+		return this.query;
 	}
 
 	@Override
@@ -287,8 +285,8 @@ public class GraffitiVertex
 	}
 
 	@Override
-	public void setVertexValue(NullWritable value) {
-		// ignore it, we don't have a vertex value
+	public void setVertexValue(Query value) {
+	    this.query = value;
 	}
 
 	@Override
