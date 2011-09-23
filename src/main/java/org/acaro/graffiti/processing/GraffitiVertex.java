@@ -76,7 +76,7 @@ public class GraffitiVertex
 		voteToHalt();
 	}
 
-	private void processMessage(GraffitiMessage message) {
+	private void processMessage(GraffitiMessage message) throws IOException {
 		
 		Query query    = message.getQuery();
 		LocationStep l = query.getLocationSteps().firstElement();
@@ -120,7 +120,7 @@ public class GraffitiVertex
 	    return newQuery;
 	}
 	
-	private void emitResults(String label, ResultSet r) {
+	private void emitResults(String label, ResultSet r) throws IOException {
         
         r.add(getVertexId());
         if (label.equals(LocationStep.EMPTY_EDGE)) {
@@ -136,7 +136,7 @@ public class GraffitiVertex
         }
 	}
 	
-	private void emitWithLabel(Text label, ResultSet r) {
+	private void emitWithLabel(Text label, ResultSet r) throws IOException {
 	    
 	    r.add(label);
 	    
@@ -150,7 +150,7 @@ public class GraffitiVertex
 	    }
 	}
 
-	private void emit(ResultSet r) {
+	private void emit(ResultSet r) throws IOException {
 	    emitter.emit(r);
 	}
 	
@@ -313,7 +313,11 @@ public class GraffitiVertex
 	
 	@Override
 	public void postApplication() {
-	    this.emitter.close();
+	    try {
+            this.emitter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 	}
 
 	@Override
