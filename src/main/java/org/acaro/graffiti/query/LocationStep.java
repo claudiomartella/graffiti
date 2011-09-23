@@ -26,12 +26,22 @@ import org.apache.hadoop.io.Writable;
 import com.google.common.base.Joiner;
 
 public class LocationStep implements Writable {
+    public static final String EMPTY_EDGE = " ";
 	private ArrayList<Condition> conditions = new ArrayList<Condition>();
-	private String edge = " ";
+	private String edge = EMPTY_EDGE;
 	private int repeat = -1;
 	private boolean isSP = false;
+
+	public LocationStep() { }
 	
-	public void setEdge(String edge) {
+	public LocationStep(LocationStep other) {
+	    this.conditions.addAll(other.getConditions());
+	    this.edge   = other.getEdge();
+	    this.repeat = other.getRepeat();
+	    this.isSP   = other.isSP();
+	}
+	
+    public void setEdge(String edge) {
 		this.edge = edge;
 	}
 
@@ -66,7 +76,7 @@ public class LocationStep implements Writable {
 	public String toString() {
 		StringBuffer string = new StringBuffer();
 		
-		if (!edge.equals(" "))
+		if (!edge.equals(EMPTY_EDGE))
 			string.append(edge);
 		else
 			string.append("<no edge>");

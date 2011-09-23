@@ -18,16 +18,10 @@ package org.acaro.graffiti.playground;
 import org.acaro.graffiti.query.ParseError;
 import org.acaro.graffiti.query.RDFPathLexer;
 import org.acaro.graffiti.query.RDFPathParser;
-import org.acaro.graffiti.query.RDFPathParser.query_return;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.TokenRewriteStream;
 import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.tree.CommonTreeAdaptor;
-import org.antlr.runtime.tree.TreeAdaptor;
-
-import antlr.Token;
 
 public class QueryPrinter {
 	private static final String USAGE = "./QueryParser <query>";
@@ -72,7 +66,6 @@ public class QueryPrinter {
 				break;
 				
 			case RDFPathLexer.ENDNODEFUNCTION:
-				int num = treeChild.getChildCount();
 				
 				if (treeChild.getChildCount() != 1)
 					System.out.print(". " + treeChild.getChild(0).getText() +

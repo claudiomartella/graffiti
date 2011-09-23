@@ -41,11 +41,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.log4j.Logger;
 
-/*
- * XXX: can maybe save some clone()s. If we firstElement() instead of pop() before we evaluate
- * we can basically share the same object UNTIL we modify it. And we modify it ONLY if we are
- * a matching vertex, before we forward it. So all the non-matching vertices share the same object.
- */
 public class GraffitiVertex 
     extends MutableVertex<Text, Query, Text, GraffitiMessage> 
     implements Tool {
@@ -61,7 +56,8 @@ public class GraffitiVertex
     private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
     private final List<GraffitiMessage> msgList = new ArrayList<GraffitiMessage>();
 	private Configuration conf;
-    private Text vertexId = null;
+    private GraffitiEmitter emitter;
+	private Text vertexId = null;
     private Query query;
     private boolean halt = false;
     private int numOutEdges; 
@@ -70,7 +66,7 @@ public class GraffitiVertex
 	public void compute(Iterator<GraffitiMessage> messages) throws IOException {
 		
 		if (getSuperstep() == 0 && isSource()) {
-            processMessage(new GraffitiMessage(this.query.clone(), new ResultSet()));
+            processMessage(new GraffitiMessage(this.query, new ResultSet()));
 		} else {
 			while (messages.hasNext()) {
 				processMessage(messages.next());
@@ -82,42 +78,103 @@ public class GraffitiVertex
 
 	private void processMessage(GraffitiMessage message) {
 		
-		Query query = message.getQuery();
-	    LocationStep l = query.getLocationSteps().pop();
-		
-		// 1- check all the conditions
-		for (Condition c: l.getConditions()) {
-			if (c.evaluate(this) == false) {
-				return;
-			}
+		Query query    = message.getQuery();
+		LocationStep l = query.getLocationSteps().firstElement();
+		if (checkConditions(l) == false) {
+		    return;
 		}
 		
-		// 2- check if we have to repeat this locationStep
-		int rp = l.getRepeat();
-		if (rp > 0) {
-			l.setRepeat(--rp);
-			query.getLocationSteps().push(l);
-		}
-
-		// 3- forward the query through the right edge(s)
-		if (l.getEdge().equals("*")) {
-		    for (Text label: getEdgesLabels()) {
-		        forwardMsgThroughLabel(label, message.clone());
-		    }
+		Query newQuery = prepareNewQuery(query);
+		
+		String label = l.getEdge();
+		ResultSet r  = message.getResults();
+		if (newQuery.isFinished()) {
+		    emitResults(label, new ResultSet(r));
 		} else {
-		    forwardMsgThroughLabel(new Text(l.getEdge()), message);
-		}		
+		    forwardMsg(label, new GraffitiMessage(newQuery, new ResultSet(r)));
+		}
 	}
+		
+	private boolean checkConditions(LocationStep l) {
 
-	private void forwardMsgThroughLabel(Text label, GraffitiMessage message) {
+	    for (Condition c: l.getConditions()) {
+	        if (c.evaluate(this) == false) {
+	            return false;
+	        }
+	    }
+
+	    return true;
+	}
+	
+	private Query prepareNewQuery(Query old) {
 	    
-	    message.getResults().push(getVertexId());
-	    message.getResults().push(label);
+	    Query newQuery = new Query(old);
+	    LocationStep l = newQuery.getLocationSteps().pop();
+        int rp = l.getRepeat();
+        if (rp > 0) {
+            LocationStep newL = new LocationStep(l);
+            newL.setRepeat(--rp);
+            newQuery.getLocationSteps().push(newL);
+        }
+	    
+	    return newQuery;
+	}
+	
+	private void emitResults(String label, ResultSet r) {
+        
+        r.add(getVertexId());
+        if (label.equals(LocationStep.EMPTY_EDGE)) {
+            emit(r);
+        } else {
+            if (label.equals("*")) {
+                for (Text tLabel: getEdgesLabels()) {
+                    emitWithLabel(tLabel, new ResultSet(r));
+                }
+            } else {
+                emitWithLabel(new Text(label), r);
+            }
+        }
+	}
+	
+	private void emitWithLabel(Text label, ResultSet r) {
+	    
+	    r.add(label);
 	    
 	    Set<Text> edges = labelledOutEdgeMap.get(label);
 	    if (edges != null) {
 	        for (Text v: edges) {
-	            sendMsg(v, message.clone());
+	            ResultSet rslv = new ResultSet(r);
+	            rslv.add(v);
+	            emit(rslv);
+	        }
+	    }
+	}
+
+	private void emit(ResultSet r) {
+	    emitter.emit(r);
+	}
+	
+	private void forwardMsg(String label, GraffitiMessage message) {
+        
+	    if (label.equals("*")) {
+            for (Text tLabel: getEdgesLabels()) {
+                // "clone" it because they go through paths with different labels
+                forwardMsgThroughLabel(tLabel, new GraffitiMessage(message));
+            }
+        } else {
+            forwardMsgThroughLabel(new Text(label), message);
+        }   
+	}
+	
+	private void forwardMsgThroughLabel(Text label, GraffitiMessage message) {
+	    
+	    message.getResults().add(getVertexId());
+	    message.getResults().add(label);
+	    
+	    Set<Text> edges = labelledOutEdgeMap.get(label);
+	    if (edges != null) {
+	        for (Text v: edges) {
+	            sendMsg(v, message);
 	        }
 	    }
 	}
@@ -256,7 +313,7 @@ public class GraffitiVertex
 	
 	@Override
 	public void postApplication() {
-		// Don't need this
+	    this.emitter.close();
 	}
 
 	@Override
@@ -267,7 +324,7 @@ public class GraffitiVertex
 	@Override
 	public void preApplication() throws InstantiationException,
 			IllegalAccessException {
-		// Don't need this
+	    this.emitter = GraffitiEmitter.getInstance();
 	}
 
 	@Override
@@ -277,6 +334,7 @@ public class GraffitiVertex
 
 	@Override
 	public void sendMsgToAllEdges(GraffitiMessage m) {
+	    
 		for (Set<Text> labelSet: labelledOutEdgeMap.values()) {
 			for (Text v: labelSet) {
 				sendMsg(v, m);

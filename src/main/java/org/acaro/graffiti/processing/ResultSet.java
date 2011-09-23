@@ -18,13 +18,19 @@ package org.acaro.graffiti.processing;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Stack;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
+/*
+ * TODO:
+ * Can highly optimize by keeping the internal binary representation. After all we only
+ * add stuff to this before serializing it back, so no need to deserialize into Stack.
+ */
 public class ResultSet 
-    implements Writable, Cloneable {
+    implements Writable, Iterable<Text> {
 
     private Stack<Text> results = new Stack<Text>();    
 
@@ -34,18 +40,13 @@ public class ResultSet
         this.results = results;
     }
 
-    public Text pop() {
-        return results.pop();
+    public ResultSet(ResultSet other) {
+        this.results = new Stack<Text>();
+        this.results.addAll(other.results);
     }
-    
-    public Text push(Text item) {
-        return results.push(item);
-    }
-    
-    @SuppressWarnings("unchecked")
-    @Override
-    public ResultSet clone() {
-        return new ResultSet((Stack<Text>) results.clone());
+
+    public Text add(Text result) {
+        return results.push(result);
     }
     
     @Override
@@ -64,5 +65,10 @@ public class ResultSet
         for (Text result: results) {
             result.write(output);
         }
+    }
+
+    @Override
+    public Iterator<Text> iterator() {
+        return results.iterator();
     }
 }

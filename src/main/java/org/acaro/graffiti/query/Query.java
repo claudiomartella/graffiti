@@ -25,7 +25,7 @@ import org.apache.hadoop.io.Writable;
 import com.google.common.base.Joiner;
 
 public class Query 
-    implements Writable, Cloneable {
+    implements Writable {
  
     private Stack<LocationStep> locationSteps;
 	private EndNodeFunction enf;
@@ -41,6 +41,13 @@ public class Query
 	public Query(String startNode, Stack<LocationStep> locationSteps, EndNodeFunction func) {
 		this(startNode, locationSteps);
 		setEndNodeFunction(func);
+	}
+	
+    public Query(Query other) {
+	    this.locationSteps = new Stack<LocationStep>();
+	    this.locationSteps.addAll(other.getLocationSteps());
+	    this.startNode     = other.getStartNode();
+	    this.enf           = other.getEndNodeFunction();
 	}
 
 	public void setStartNode(String label) {
@@ -65,6 +72,10 @@ public class Query
 	
 	public EndNodeFunction getEndNodeFunction() {
 		return this.enf;
+	}
+	
+	public boolean isFinished() {
+	    return locationSteps.size() == 0;
 	}
 	
 	public String toString() {
@@ -113,17 +124,5 @@ public class Query
 		} else { 
 			output.writeBoolean(false);
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-    @Override
-	public Query clone() {
-        Query clonedQuery = (enf == null) 
-            ? new Query(startNode, locationSteps) 
-            : new Query(startNode, locationSteps, enf);
-        
-        clonedQuery.locationSteps = (Stack<LocationStep>) locationSteps.clone();
-            
-        return clonedQuery;
 	}
 }

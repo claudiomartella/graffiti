@@ -23,7 +23,7 @@ import org.acaro.graffiti.query.Query;
 import org.apache.hadoop.io.Writable;
 
 public class GraffitiMessage 
-    implements Writable, Cloneable {
+    implements Writable {
 
     private Query query;
     private ResultSet results;
@@ -31,6 +31,11 @@ public class GraffitiMessage
     public GraffitiMessage(Query query, ResultSet results) {
         this.query   = query;
         this.results = results;
+    }
+    
+    public GraffitiMessage(GraffitiMessage other) {
+        this.query   = new Query(other.getQuery());
+        this.results = new ResultSet(other.getResults());
     }
     
     public Query getQuery() {
@@ -41,11 +46,6 @@ public class GraffitiMessage
         return this.results;
     }
 
-    @Override
-    public GraffitiMessage clone() {
-        return new GraffitiMessage(this.query.clone(), this.results.clone());
-    }
-    
     @Override
     public void readFields(DataInput input) throws IOException {
         this.query   = new Query();
