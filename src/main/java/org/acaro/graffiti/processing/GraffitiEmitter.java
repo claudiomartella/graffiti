@@ -43,9 +43,7 @@ public class GraffitiEmitter {
     }
     
     public synchronized void emit(ResultSet r) throws IOException {
-        for (Text t: r) {
-            t.write(out);
-        }
+    	r.write(out);
     }
     
     public synchronized void close() throws IOException {
