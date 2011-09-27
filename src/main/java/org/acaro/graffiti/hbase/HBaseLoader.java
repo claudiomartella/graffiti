@@ -32,7 +32,8 @@ import org.openrdf.rio.n3.N3ParserFactory;
 public class HBaseLoader {
 	private static final String USAGE = "usage: HBaseLoader <file to load>";
 
-	private static void loadFile(final String file, HBaseManager manager) throws RDFParseException, RDFHandlerException, FileNotFoundException, IOException {
+	private static void loadFile(final String file, HBaseManager manager) 
+		throws RDFParseException, RDFHandlerException, FileNotFoundException, IOException {
 
 		RDFParser parser = new N3ParserFactory().getParser();
 		TripleHandler handler = new TripleHandler(manager);

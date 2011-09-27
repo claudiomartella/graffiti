@@ -63,7 +63,7 @@ public class GraffitiVertexReader
             vertex.setVertexId(new Text(jsonVertex.getString(0)));
             vertex.setVertexValue(this.query);
             
-            JSONArray jsonEdgeArray = jsonVertex.getJSONArray(2);
+            JSONArray jsonEdgeArray = jsonVertex.getJSONArray(1);
             for (int i = 0; i < jsonEdgeArray.length(); ++i) {
                 JSONArray jsonEdge = jsonEdgeArray.getJSONArray(i);
                 vertex.addEdge(new Text(jsonEdge.getString(0)), 

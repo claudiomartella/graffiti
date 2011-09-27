@@ -31,7 +31,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 public class HBase2Txt {
 	private static final String USAGE = "usage: HBase2Txt <output filename>";
-	private static final byte[] SPO = Bytes.toBytes("_SPO");;
+	private static final byte[] SPO = Bytes.toBytes("_SPO");
 
 	public static void main(String[] args) throws IOException {
 
