@@ -1,0 +1,3 @@
+How to create DBLP table:
+  
+create 'DBLP', { NAME => '_SPO', BLOOMFILTER => 'ROW', COMPRESSION => 'GZ', VERSIONS => '1', BLOCKCACHE => 'true'}, { NAME => '_PSO', BLOOMFILTER => 'ROW', COMPRESSION => 'GZ', VERSIONS => '1', BLOCKCACHE => 'true'}
