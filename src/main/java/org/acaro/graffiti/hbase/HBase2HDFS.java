@@ -48,7 +48,8 @@ public class HBase2HDFS {
         out = fs.create(outFile);
 	}
 
-	private void convert() throws IOException {
+	private void convert() 
+	    throws IOException {
 		
 		Scan scan = new Scan();
 		scan.addFamily(Bytes.toBytes("_SPO"));
@@ -65,6 +66,18 @@ public class HBase2HDFS {
 		out.close();
 	}
 	
+	private String cleanResource(String resource) {
+	    String cleaned = resource;
+	    
+	    // this is not an URI
+	    if (cleaned.startsWith("\"")) {
+	        int end = resource.indexOf('"', 1);
+	        cleaned = resource.substring(1, end);
+	    }
+	    
+	    return cleaned;
+	}
+	
 	private void write(byte[] row, NavigableMap<byte[], byte[]> columns) 
 	    throws IOException {
 		
@@ -78,7 +91,7 @@ public class HBase2HDFS {
 		    json.writeStartArray();
 		    String splits[] = Bytes.toString(column.getKey()).split("\\|");
 		    json.writeString(splits[0]);
-		    json.writeString(splits[1]);
+		    json.writeString(cleanResource(splits[1]));
 		    json.writeEndArray();
 		}
 		json.writeEndArray();

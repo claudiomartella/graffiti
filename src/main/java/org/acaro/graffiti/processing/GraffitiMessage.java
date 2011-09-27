@@ -47,7 +47,9 @@ public class GraffitiMessage
     }
 
     @Override
-    public void readFields(DataInput input) throws IOException {
+    public void readFields(DataInput input) 
+        throws IOException {
+        
         this.query   = new Query();
         this.results = new ResultSet();
         this.query.readFields(input);
@@ -55,7 +57,9 @@ public class GraffitiMessage
     }
 
     @Override
-    public void write(DataOutput output) throws IOException {
+    public void write(DataOutput output) 
+        throws IOException {
+        
         this.query.write(output);
         this.results.write(output);
     }

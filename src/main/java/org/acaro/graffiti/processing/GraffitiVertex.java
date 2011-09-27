@@ -63,7 +63,8 @@ public class GraffitiVertex
     private int numOutEdges; 
 
 	@Override
-	public void compute(Iterator<GraffitiMessage> messages) throws IOException {
+	public void compute(Iterator<GraffitiMessage> messages) 
+	    throws IOException {
 		
 		if (getSuperstep() == 0 && isSource()) {
             processMessage(new GraffitiMessage(this.query, new ResultSet()));
@@ -76,7 +77,8 @@ public class GraffitiVertex
 		voteToHalt();
 	}
 
-	private void processMessage(GraffitiMessage message) throws IOException {
+	private void processMessage(GraffitiMessage message) 
+	    throws IOException {
 		
 		Query query    = message.getQuery();
 		LocationStep l = query.getLocationSteps().firstElement();
@@ -123,7 +125,8 @@ public class GraffitiVertex
 	    return newQuery;
 	}
 	
-	private void emitResults(String label, ResultSet r) throws IOException {
+	private void emitResults(String label, ResultSet r) 
+	    throws IOException {
         
         r.add(getVertexId());
         if (label.equals(LocationStep.EMPTY_EDGE)) {
@@ -139,7 +142,8 @@ public class GraffitiVertex
         }
 	}
 	
-	private void emitWithLabel(Text label, ResultSet r) throws IOException {
+	private void emitWithLabel(Text label, ResultSet r) 
+	    throws IOException {
 	    
 	    r.add(label);
 	    
@@ -153,7 +157,9 @@ public class GraffitiVertex
 	    }
 	}
 
-	private void emit(ResultSet r) throws IOException {
+	private void emit(ResultSet r) 
+	    throws IOException {
+	    
 	    emitter.emit(r);
 	}
 	
@@ -197,7 +203,8 @@ public class GraffitiVertex
 	}
 	
 	@Override
-	public void readFields(DataInput in) throws IOException {
+	public void readFields(DataInput in) 
+	    throws IOException {
         
 		vertexId = BspUtils.<Text>createVertexIndex(getContext().getConfiguration());
         vertexId.readFields(in);
@@ -226,7 +233,8 @@ public class GraffitiVertex
 	}
 
 	@Override
-	public void write(DataOutput out) throws IOException {
+	public void write(DataOutput out) 
+	    throws IOException {
        
 		vertexId.write(out);
 
@@ -329,8 +337,9 @@ public class GraffitiVertex
 	}
 
 	@Override
-	public void preApplication() throws InstantiationException,
-			IllegalAccessException {
+	public void preApplication() 
+	    throws InstantiationException, IllegalAccessException {
+	    
 	    this.emitter = GraffitiEmitter.getInstance();
 	}
 
@@ -373,7 +382,9 @@ public class GraffitiVertex
 	}
 
 	@Override
-	public int run(String[] args) throws Exception {
+	public int run(String[] args) 
+	    throws Exception {
+	    
 	    if (args.length != 2) {
 	        throw new IllegalArgumentException(
 	            "run: Must have 2 arguments <input path> <query>");
