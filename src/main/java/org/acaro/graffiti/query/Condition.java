@@ -15,7 +15,7 @@
 
 package org.acaro.graffiti.query;
 
-import org.acaro.graffiti.processing.GraffitiVertex;
+import org.acaro.graffiti.processing.Vertex;
 import org.apache.hadoop.io.Writable;
 
 public abstract class Condition implements Writable {
@@ -37,5 +37,5 @@ public abstract class Condition implements Writable {
 			throw new ParseError("Unknown EndNodeFunction " + func);
 	}
 	
-	public abstract boolean evaluate(GraffitiVertex v);
+	public abstract boolean evaluate(Vertex v);
 }

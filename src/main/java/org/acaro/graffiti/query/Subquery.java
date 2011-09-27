@@ -20,7 +20,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Set;
 
-import org.acaro.graffiti.processing.GraffitiVertex;
+import org.acaro.graffiti.processing.Vertex;
 import org.apache.hadoop.io.Text;
 
 public class Subquery extends Condition {
@@ -57,7 +57,7 @@ public class Subquery extends Condition {
 	}
 
     @Override
-    public boolean evaluate(GraffitiVertex vertex) {
+    public boolean evaluate(Vertex vertex) {
         
         Set<Text> values = vertex.getEdgesByLabel(new Text(edge));
         if (values == null || values.size() != 1) {
