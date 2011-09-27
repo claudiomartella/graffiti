@@ -23,7 +23,12 @@
 -->
 <configuration>
 <property>
-	<name>hbase.zookeeper.quorum</name>
-	<value>rose.inf.unibz.it:2181</value>
+   <name>hbase.zookeeper.quorum</name>
+   <value>10.7.20.127</value>
+</property>
+<property>
+   <name>hbase.zookeeper.property.clientPort</name>
+   <value>2181</value>
 </property>
 </configuration>
+

@@ -59,6 +59,11 @@
 			<artifactId>giraph</artifactId>
 			<version>0.70</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.zookeeper</groupId>
+			<artifactId>zookeeper</artifactId>
+			<version>3.3.3</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>

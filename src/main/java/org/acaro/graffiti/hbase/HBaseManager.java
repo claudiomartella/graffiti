@@ -38,6 +38,7 @@ public class HBaseManager implements Closeable {
 		Configuration conf = HBaseConfiguration.create();
 		htable = new HTable(conf, "DBLP");
 		htable.setWriteBufferSize(BUFFERSIZE);
+		htable.setAutoFlush(false);
 	}
 	
 	public void close() throws IOException {

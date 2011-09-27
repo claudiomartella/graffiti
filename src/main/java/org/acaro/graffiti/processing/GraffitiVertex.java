@@ -95,6 +95,9 @@ public class GraffitiVertex
 		}
 	}
 		
+	/*
+	 * checks whether all the conditions match (AND)
+	 */
 	private boolean checkConditions(LocationStep l) {
 
 	    for (Condition c: l.getConditions()) {
