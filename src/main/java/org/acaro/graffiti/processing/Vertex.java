@@ -31,7 +31,6 @@ import org.acaro.graffiti.query.Condition;
 import org.acaro.graffiti.query.LocationStep;
 import org.acaro.graffiti.query.Query;
 import org.acaro.graffiti.query.QueryParser;
-import org.apache.giraph.graph.BspUtils;
 import org.apache.giraph.graph.GiraphJob;
 import org.apache.giraph.graph.MutableVertex;
 import org.apache.hadoop.conf.Configuration;
@@ -47,7 +46,7 @@ implements Tool {
 
     public static final String SOURCE_VX = "source_vertex";
     public static final String QUERY = "query";
-    public static final String MINWORKERS = "7";
+    public static final String MINWORKERS = "1";
     public static final String MAXWORKERS = "7";
     private static final Logger LOG = Logger.getLogger(Vertex.class);
     /*
@@ -58,7 +57,6 @@ implements Tool {
     private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
     private final List<Message> msgList = new ArrayList<Message>();
     private Configuration conf;
-    private ResultsAggregator aggregator;
     private Text vertexId = null;
     private Query query;
     private boolean halt = false;
@@ -214,7 +212,7 @@ implements Tool {
     public void readFields(DataInput in) 
     throws IOException {
 
-        vertexId = BspUtils.<Text>createVertexIndex(getContext().getConfiguration());
+        vertexId = new Text();
         vertexId.readFields(in);
 
         int edgeMapSize = in.readInt();
@@ -231,8 +229,7 @@ implements Tool {
 
         int msgListSize = in.readInt();
         for (int i = 0; i < msgListSize; i++) {
-            Message msg = BspUtils.<Message>createMessageValue(
-                    getContext().getConfiguration());
+            Message msg = new Message();
             msg.readFields(in);
             msgList.add(msg);
         }

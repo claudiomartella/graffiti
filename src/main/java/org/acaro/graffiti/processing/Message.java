@@ -28,6 +28,8 @@ implements Writable {
     private Query query;
     private ResultSet results;
 
+    public Message() { }
+
     public Message(Query query, ResultSet results) {
         this.query   = query;
         this.results = results;
