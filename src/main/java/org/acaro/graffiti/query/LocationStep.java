@@ -11,7 +11,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
 
 package org.acaro.graffiti.query;
 
@@ -25,115 +25,121 @@ import org.apache.hadoop.io.Writable;
 
 import com.google.common.base.Joiner;
 
-public class LocationStep implements Writable {
+public class LocationStep 
+implements Writable {
+
     public static final String EMPTY_EDGE = " ";
-	private ArrayList<Condition> conditions = new ArrayList<Condition>();
-	private String edge = EMPTY_EDGE;
-	private int repeat = -1;
-	private boolean isSP = false;
+    private ArrayList<Condition> conditions = new ArrayList<Condition>();
+    private String edge = EMPTY_EDGE;
+    private int repeat = -1;
+    private boolean isSP = false;
 
-	public LocationStep() { }
-	
-	public LocationStep(LocationStep other) {
-	    this.conditions.addAll(other.getConditions());
-	    this.edge   = other.getEdge();
-	    this.repeat = other.getRepeat();
-	    this.isSP   = other.isSP();
-	}
-	
+    public LocationStep() { }
+
+    public LocationStep(LocationStep other) {
+        this.conditions.addAll(other.getConditions());
+        this.edge   = other.getEdge();
+        this.repeat = other.getRepeat();
+        this.isSP   = other.isSP();
+    }
+
     public void setEdge(String edge) {
-		this.edge = edge;
-	}
+        this.edge = edge;
+    }
 
-	public void addCondition(Condition condition) {
-		conditions.add(condition);
-	}
+    public void addCondition(Condition condition) {
+        conditions.add(condition);
+    }
 
-	public void setRepeat(Integer repeat) {
-		this.repeat = repeat;
-	}
+    public void setRepeat(Integer repeat) {
+        this.repeat = repeat;
+    }
 
-	public void setSP(boolean value) {
-		this.isSP = value;
-	}
-	
-	public String getEdge() {
-		return this.edge;
-	}
-	
-	public List<Condition> getConditions() {
-		return this.conditions;
-	}
-	
-	public int getRepeat() {
-		return this.repeat;
-	}
-	
-	public boolean isSP() {
-		return this.isSP;
-	}
-	
-	public String toString() {
-		StringBuffer string = new StringBuffer();
-		
-		if (!edge.equals(EMPTY_EDGE))
-			string.append(edge);
-		else
-			string.append("<no edge>");
-		
-		string.append(" ");
-		string.append(Joiner.on(" | ").skipNulls().join(conditions));
-		
-		if (repeat != -1) {
-			string.append(" (");
-			if (isSP)
-				string.append("*");
-			string.append(repeat);
-			string.append(")");
-		}
-		
-		return string.toString();
-	}
+    public void setSP(boolean value) {
+        this.isSP = value;
+    }
 
-	@Override
-	public void readFields(DataInput input) throws IOException {
-		setEdge(input.readUTF());
-		setRepeat(input.readInt());
-		setSP(input.readBoolean());
-		
-		int n = input.readInt();
-		for (int i = 0; i < n; i++) {
-			Condition.TYPE type = Condition.TYPE.values()[input.readInt()];
-			Condition c;
-			
-			switch (type) {
-			case FILTER:
-			{
-				c = new Filter();
-				break;
-			}	
-			case SUBQUERY:
-			{
-				c = new Subquery();
-				break;
-			}
-			default:
-				throw new RuntimeException("Unknown Condition type at readFields!");
-			}
+    public String getEdge() {
+        return this.edge;
+    }
 
-			c.readFields(input);
-			conditions.add(c);
-		}
-	}
+    public List<Condition> getConditions() {
+        return this.conditions;
+    }
 
-	@Override
-	public void write(DataOutput output) throws IOException {
-		output.writeUTF(edge);
-		output.writeInt(repeat);
-		output.writeBoolean(isSP);
-		
-		output.writeInt(conditions.size());
-		for (Condition c: conditions)
-			c.write(output);
-	}
+    public int getRepeat() {
+        return this.repeat;
+    }
+
+    public boolean isSP() {
+        return this.isSP;
+    }
+
+    public String toString() {
+        StringBuffer string = new StringBuffer();
+
+        if (!edge.equals(EMPTY_EDGE)) {
+            string.append(edge);
+        } else {
+            string.append("<no edge>");
+        }
+
+        string.append(" ");
+        string.append(Joiner.on(" | ").skipNulls().join(conditions));
+
+        if (repeat != -1) {
+            string.append(" (");
+            if (isSP)
+                string.append("*");
+            string.append(repeat);
+            string.append(")");
+        }
+
+        return string.toString();
+    }
+
+    @Override
+    public void readFields(DataInput input) 
+    throws IOException {
+        setEdge(input.readUTF());
+        setRepeat(input.readInt());
+        setSP(input.readBoolean());
+
+        int n = input.readInt();
+        for (int i = 0; i < n; i++) {
+            Condition.TYPE type = Condition.TYPE.values()[input.readInt()];
+            Condition c;
+
+            switch (type) {
+            case FILTER:
+            {
+                c = new Filter();
+                break;
+            }	
+            case SUBQUERY:
+            {
+                c = new Subquery();
+                break;
+            }
+            default:
+                throw new RuntimeException("Unknown Condition type at readFields!");
+            }
+
+            c.readFields(input);
+            conditions.add(c);
+        }
+    }
+
+    @Override
+    public void write(DataOutput output) 
+    throws IOException {
+        output.writeUTF(edge);
+        output.writeInt(repeat);
+        output.writeBoolean(isSP);
+
+        output.writeInt(conditions.size());
+        for (Condition c: conditions) {
+            c.write(output);
+        }
+    }
 }

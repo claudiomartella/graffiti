@@ -23,7 +23,8 @@ import java.util.Set;
 import org.acaro.graffiti.processing.Vertex;
 import org.apache.hadoop.io.Text;
 
-public class Filter extends Condition {
+public class Filter 
+extends Condition {
 	
     private FUNCTION function;
 	private String argument;
@@ -42,15 +43,19 @@ public class Filter extends Condition {
 	}
 
 	@Override
-	public void readFields(DataInput input) throws IOException {
+	public void readFields(DataInput input) 
+	throws IOException {
+	
 	    edge     = input.readUTF();
 	    function = FUNCTION.values()[input.readInt()];
 		argument = input.readUTF();
 	}
 
 	@Override
-	public void write(DataOutput output) throws IOException {
-		output.writeInt(Condition.TYPE.FILTER.ordinal());
+	public void write(DataOutput output) 
+	throws IOException {
+	
+	    output.writeInt(Condition.TYPE.FILTER.ordinal());
 		output.writeUTF(edge);
 		output.writeInt(function.ordinal());
 		output.writeUTF(argument);

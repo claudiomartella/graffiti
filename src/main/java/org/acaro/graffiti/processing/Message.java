@@ -11,7 +11,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
 
 package org.acaro.graffiti.processing;
 
@@ -23,7 +23,7 @@ import org.acaro.graffiti.query.Query;
 import org.apache.hadoop.io.Writable;
 
 public class Message 
-    implements Writable {
+implements Writable {
 
     private Query query;
     private ResultSet results;
@@ -32,24 +32,24 @@ public class Message
         this.query   = query;
         this.results = results;
     }
-    
+
     public Message(Message other) {
         this.query   = new Query(other.getQuery());
         this.results = new ResultSet(other.getResults());
     }
-    
+
     public Query getQuery() {
         return this.query;
     }
-    
+
     public ResultSet getResults() {
         return this.results;
     }
 
     @Override
     public void readFields(DataInput input) 
-        throws IOException {
-        
+    throws IOException {
+
         this.query   = new Query();
         this.results = new ResultSet();
         this.query.readFields(input);
@@ -58,8 +58,8 @@ public class Message
 
     @Override
     public void write(DataOutput output) 
-        throws IOException {
-        
+    throws IOException {
+
         this.query.write(output);
         this.results.write(output);
     }

@@ -28,9 +28,10 @@ import org.apache.hadoop.io.Writable;
  * TODO:
  * Can highly optimize by keeping the internal binary representation. After all we only
  * add stuff to this before serializing it back, so no need to deserialize into Stack.
+ * At second thought, that's not true as Text is already the binary representation in memory.
  */
 public class ResultSet 
-    implements Writable, Iterable<Text> {
+implements Writable, Iterable<Text> {
 
     private Stack<Text> results = new Stack<Text>();    
 
@@ -50,7 +51,9 @@ public class ResultSet
     }
     
     @Override
-    public void readFields(DataInput input) throws IOException {
+    public void readFields(DataInput input) 
+    throws IOException {
+        
         int n = input.readInt();
         for (int i = 0; i < n; i++) {
             Text t = new Text();
@@ -60,7 +63,9 @@ public class ResultSet
     }
 
     @Override
-    public void write(DataOutput output) throws IOException {
+    public void write(DataOutput output) 
+    throws IOException {
+        
         output.writeInt(results.size());
         for (Text result: results) {
             result.write(output);

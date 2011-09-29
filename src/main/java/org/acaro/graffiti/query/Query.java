@@ -11,7 +11,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
 
 package org.acaro.graffiti.query;
 
@@ -25,104 +25,108 @@ import org.apache.hadoop.io.Writable;
 import com.google.common.base.Joiner;
 
 public class Query 
-    implements Writable {
- 
+implements Writable {
+
     private Stack<LocationStep> locationSteps;
-	private EndNodeFunction enf;
-	private String startNode;
-	
-	public Query() { }
-	
-	public Query(String startNode, Stack<LocationStep> locationSteps) {
-		setStartNode(startNode);
-		setLocationSteps(locationSteps);
-	}
+    private EndNodeFunction enf;
+    private String startNode;
 
-	public Query(String startNode, Stack<LocationStep> locationSteps, EndNodeFunction func) {
-		this(startNode, locationSteps);
-		setEndNodeFunction(func);
-	}
-	
+    public Query() { }
+
+    public Query(String startNode, Stack<LocationStep> locationSteps) {
+        setStartNode(startNode);
+        setLocationSteps(locationSteps);
+    }
+
+    public Query(String startNode, Stack<LocationStep> locationSteps, EndNodeFunction func) {
+        this(startNode, locationSteps);
+        setEndNodeFunction(func);
+    }
+
     public Query(Query other) {
-	    this.locationSteps = new Stack<LocationStep>();
-	    this.locationSteps.addAll(other.getLocationSteps());
-	    this.startNode     = other.getStartNode();
-	    this.enf           = other.getEndNodeFunction();
-	}
+        this.locationSteps = new Stack<LocationStep>();
+        this.locationSteps.addAll(other.getLocationSteps());
+        this.startNode     = other.getStartNode();
+        this.enf           = other.getEndNodeFunction();
+    }
 
-	public void setStartNode(String label) {
-		this.startNode = label;
-	}
-	
-	public String getStartNode() {
-		return this.startNode;
-	}
-	
-	public void setLocationSteps(Stack<LocationStep> locationSteps) {
-		this.locationSteps = locationSteps;
-	}
-	
-	public Stack<LocationStep> getLocationSteps() {
-		return this.locationSteps;
-	}
-	
-	public void setEndNodeFunction(EndNodeFunction enf) {
-		this.enf = enf;
-	}
-	
-	public EndNodeFunction getEndNodeFunction() {
-		return this.enf;
-	}
-	
-	public boolean isFinished() {
-	    return locationSteps.size() == 0;
-	}
-	
-	public String toString() {
-		StringBuffer string = new StringBuffer(startNode);
-		
-		string.append(" :: ");
-		string.append(Joiner.on(" > ").skipNulls().join(locationSteps));
-		if (enf != null) {
-			string.append(enf);
-		}
-		
-		return string.toString();
-	}
+    public void setStartNode(String label) {
+        this.startNode = label;
+    }
 
-	@Override
-	public void readFields(DataInput input) throws IOException {
-		Stack<LocationStep> locationSteps = new Stack<LocationStep>();
-		
-		int n = input.readInt();
-		for (int i = 0; i < n; i++) {
-			LocationStep l = new LocationStep();
-			l.readFields(input);
-			locationSteps.add(l);
-		}
+    public String getStartNode() {
+        return this.startNode;
+    }
 
-		setLocationSteps(locationSteps);
-		setStartNode(input.readUTF());
-		if (input.readBoolean() == true) {
-			EndNodeFunction enf = new EndNodeFunction();
-			enf.readFields(input);
-			setEndNodeFunction(enf);
-		}
-	}
+    public void setLocationSteps(Stack<LocationStep> locationSteps) {
+        this.locationSteps = locationSteps;
+    }
 
-	@Override
-	public void write(DataOutput output) throws IOException {
-		output.writeInt(locationSteps.size());
-		for (LocationStep l: getLocationSteps()) {
-			l.write(output);
-		}
-		
-		output.writeUTF(getStartNode());
-		if (enf != null) {
-			output.writeBoolean(true);
-			enf.write(output);
-		} else { 
-			output.writeBoolean(false);
-		}
-	}
+    public Stack<LocationStep> getLocationSteps() {
+        return this.locationSteps;
+    }
+
+    public void setEndNodeFunction(EndNodeFunction enf) {
+        this.enf = enf;
+    }
+
+    public EndNodeFunction getEndNodeFunction() {
+        return this.enf;
+    }
+
+    public boolean isFinished() {
+        return locationSteps.size() == 0;
+    }
+
+    public String toString() {
+        StringBuffer string = new StringBuffer(startNode);
+
+        string.append(" :: ");
+        string.append(Joiner.on(" > ").skipNulls().join(locationSteps));
+        if (enf != null) {
+            string.append(enf);
+        }
+
+        return string.toString();
+    }
+
+    @Override
+    public void readFields(DataInput input) 
+    throws IOException {
+    
+        Stack<LocationStep> locationSteps = new Stack<LocationStep>();
+
+        int n = input.readInt();
+        for (int i = 0; i < n; i++) {
+            LocationStep l = new LocationStep();
+            l.readFields(input);
+            locationSteps.add(l);
+        }
+
+        setLocationSteps(locationSteps);
+        setStartNode(input.readUTF());
+        if (input.readBoolean() == true) {
+            EndNodeFunction enf = new EndNodeFunction();
+            enf.readFields(input);
+            setEndNodeFunction(enf);
+        }
+    }
+
+    @Override
+    public void write(DataOutput output) 
+    throws IOException {
+    
+        output.writeInt(locationSteps.size());
+        for (LocationStep l: getLocationSteps()) {
+            l.write(output);
+        }
+
+        output.writeUTF(getStartNode());
+        if (enf != null) {
+            output.writeBoolean(true);
+            enf.write(output);
+        } else { 
+            output.writeBoolean(false);
+        }
+    }
 }

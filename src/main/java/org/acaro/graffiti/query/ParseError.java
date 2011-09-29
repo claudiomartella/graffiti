@@ -15,7 +15,8 @@
 
 package org.acaro.graffiti.query;
 
-public class ParseError extends RuntimeException {
+public class ParseError 
+extends RuntimeException {
 
     private static final long serialVersionUID = -6429954396241543227L;
 

@@ -21,8 +21,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-public class EndNodeFunction implements Writable {
-	public enum FUNCTION { MIN, MAX, COUNT, AVG, SUM, DISTANCE };
+public class EndNodeFunction 
+implements Writable {
+
+    public enum FUNCTION { MIN, MAX, COUNT, AVG, SUM, DISTANCE };
 	private FUNCTION function;
 	private String argument;
 	
@@ -38,20 +40,21 @@ public class EndNodeFunction implements Writable {
 	}
 	
 	private FUNCTION parseFunction(String func) {
-		if (func.equals("MIN("))
+		if (func.equals("MIN(")) {
 			return FUNCTION.MIN;
-		else if (func.equals("MAX("))
+		} else if (func.equals("MAX(")) {
 			return FUNCTION.MAX;
-		else if (func.equals("COUNT("))
+		} else if (func.equals("COUNT(")) {
 			return FUNCTION.COUNT;
-		else if (func.equals("AVG("))
+		} else if (func.equals("AVG(")) {
 			return FUNCTION.AVG;
-		else if (func.equals("SUM("))
+		} else if (func.equals("SUM(")) {
 			return FUNCTION.SUM;
-		else if (func.equals("DISTANCE("))
+		} else if (func.equals("DISTANCE(")) {
 			return FUNCTION.DISTANCE;
-		else
+		} else {
 			throw new ParseError("Unknown EndNodeFunction " + func);
+		}
 	}
 	
 	public String toString() {
@@ -59,8 +62,9 @@ public class EndNodeFunction implements Writable {
 		
 		string.append(this.function.name());
 		string.append("(");
-		if (argument != null)
+		if (argument != null) {
 			string.append(argument);
+		}
 		
 		string.append(")");
 		
@@ -68,16 +72,22 @@ public class EndNodeFunction implements Writable {
 	}
 
 	@Override
-	public void readFields(DataInput input) throws IOException {
-		function = FUNCTION.values()[input.readInt()];
-		if (function == FUNCTION.DISTANCE)
+	public void readFields(DataInput input) 
+	throws IOException {
+	
+	    function = FUNCTION.values()[input.readInt()];
+		if (function == FUNCTION.DISTANCE) {
 			argument = input.readUTF();
+		}
 	}
 
 	@Override
-	public void write(DataOutput output) throws IOException {
-		output.writeInt(function.ordinal());
-		if (argument != null)
+	public void write(DataOutput output) 
+	throws IOException {
+	
+	    output.writeInt(function.ordinal());
+		if (argument != null) {
 			output.writeUTF(argument);
+		}
 	}
 }

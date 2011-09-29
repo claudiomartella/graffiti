@@ -11,7 +11,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
-*/
+ */
 
 package org.acaro.graffiti.processing;
 
@@ -30,50 +30,50 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 public class VertexReader 
-    extends TextVertexReader<Text, Query, Text> {
+extends TextVertexReader<Text, Query, Text> {
 
     private Query query;
-    
-	public VertexReader(RecordReader<LongWritable, Text> arg) {
-		super(arg);
 
-		try {
-		    
-		    String queryString = getContext().getConfiguration().get(Vertex.QUERY);
+    public VertexReader(RecordReader<LongWritable, Text> arg) {
+        super(arg);
+
+        try {
+
+            String queryString = getContext().getConfiguration().get(Vertex.QUERY);
             this.query = new QueryParser(queryString).parse();
-        
-		} catch (RecognitionException e) {
+
+        } catch (RecognitionException e) {
             e.printStackTrace();
             throw new ParseError("cannot parse query ");
         }
-	}
+    }
 
-	@Override
-	public boolean next(MutableVertex<Text, Query, Text, ?> vertex)
-		throws IOException, InterruptedException {
-		
-		if (!getRecordReader().nextKeyValue()) {
+    @Override
+    public boolean next(MutableVertex<Text, Query, Text, ?> vertex)
+    throws IOException, InterruptedException {
+
+        if (!getRecordReader().nextKeyValue()) {
             return false;
-		}
-		
-		Text line = getRecordReader().getCurrentValue();
-		
-		try {
+        }
+
+        Text line = getRecordReader().getCurrentValue();
+
+        try {
             JSONArray jsonVertex = new JSONArray(line.toString());
             vertex.setVertexId(new Text(jsonVertex.getString(0)));
             vertex.setVertexValue(this.query);
-            
+
             JSONArray jsonEdgeArray = jsonVertex.getJSONArray(1);
             for (int i = 0; i < jsonEdgeArray.length(); ++i) {
                 JSONArray jsonEdge = jsonEdgeArray.getJSONArray(i);
                 vertex.addEdge(new Text(jsonEdge.getString(0)), 
-                			   new Text(jsonEdge.getString(1)));
+                        new Text(jsonEdge.getString(1)));
             }
         } catch (JSONException e) {
             throw new IllegalArgumentException(
-                "next: Couldn't get vertex from line " + line, e);
+                    "next: Couldn't get vertex from line " + line, e);
         }
-		
-		return true;
-	}
+
+        return true;
+    }
 }

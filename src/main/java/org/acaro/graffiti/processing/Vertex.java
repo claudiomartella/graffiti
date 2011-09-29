@@ -47,6 +47,8 @@ implements Tool {
 
     public static final String SOURCE_VX = "source_vertex";
     public static final String QUERY = "query";
+    public static final String MINWORKERS = "7";
+    public static final String MAXWORKERS = "7";
     private static final Logger LOG = Logger.getLogger(Vertex.class);
     /*
      * It contains all the outgoing edges. Each entry in the hashmap represents an outgoing label.
@@ -159,8 +161,14 @@ implements Tool {
 
     private void emit(ResultSet r) 
     throws IOException {
-
-        aggregator.aggregate(r);
+        
+        StringBuffer sb = new StringBuffer();
+        
+        for (Text t: r) {
+            sb.append(t.toString() + " ");
+        }
+        
+        LOG.error(sb.toString());
     }
 
     private void forwardMsg(String label, Message message) {
@@ -336,12 +344,12 @@ implements Tool {
     public void preApplication() 
     throws InstantiationException, IllegalAccessException {
 
-        registerAggregator("results", ResultsAggregator.class);
+        //registerAggregator("results", ResultsAggregator.class);
     }
 
     @Override
     public void preSuperstep() {
-        aggregator = (ResultsAggregator) getAggregator("results");
+        //aggregator = (ResultsAggregator) getAggregator("results");
     }
 
     @Override
@@ -394,8 +402,9 @@ implements Tool {
         FileInputFormat.addInputPath(job, new Path(args[0]));
         job.getConfiguration().set(Vertex.SOURCE_VX, q.getStartNode());
         job.getConfiguration().set(Vertex.QUERY, args[1]);
-
-        //job.setWorkerConfiguration(Integer.parseInt(argArray[3]), Integer.parseInt(argArray[3]), 100.0f);
+        job.getConfiguration().set(GiraphJob.ZOOKEEPER_LIST, "rose.inf.unibz.it:2181");
+        job.setWorkerConfiguration(Integer.parseInt(MINWORKERS), Integer.parseInt(MAXWORKERS), 100.0f);
+        
         if (job.run(true) == true) {
             return 0;
         } else {
