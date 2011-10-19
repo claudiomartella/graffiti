@@ -49,11 +49,6 @@ implements Tool {
     public static final String MINWORKERS = "1";
     public static final String MAXWORKERS = "7";
     private static final Logger LOG = Logger.getLogger(Vertex.class);
-    /*
-     * It contains all the outgoing edges. Each entry in the hashmap represents an outgoing label.
-     * Each element of the contained TreeSet are vertices on the other end of an edge with
-     * that label.
-     */
     private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
     private final List<Message> msgList = new ArrayList<Message>();
     private Configuration conf;
@@ -107,7 +102,7 @@ implements Tool {
                 return false;
             }
         }
-
+        
         return true;
     }
 
@@ -129,10 +124,10 @@ implements Tool {
     throws IOException {
 
         r.add(getVertexId());
-        if (label.equals(LocationStep.EMPTY_EDGE)) {
+        if (label.equals(LocationStep.EMPTY_LABEL)) {
             emit(r);
         } else {
-            if (label.equals("*")) {
+            if (label.equals(LocationStep.ANY_LABEL)) {
                 for (Text tLabel: getEdgesLabels()) {
                     emitWithLabel(tLabel, new ResultSet(r));
                 }
@@ -156,22 +151,15 @@ implements Tool {
             }
         }
     }
-
-    private void emit(ResultSet r) 
-    throws IOException {
-        
-        StringBuffer sb = new StringBuffer();
-        
-        for (Text t: r) {
-            sb.append(t.toString() + " ");
-        }
-        
-        LOG.error(sb.toString());
+    
+    private void emit(ResultSet r) throws IOException {
+        Emitter e = Emitters.getInstance().getEmitter(getContext());
+        e.write(r);
     }
 
     private void forwardMsg(String label, Message message) {
 
-        if (label.equals("*")) {
+        if (label.equals(LocationStep.ANY_LABEL)) {
             for (Text tLabel: getEdgesLabels()) {
                 // "clone" it because they go through paths with different labels
                 forwardMsgThroughLabel(tLabel, new Message(message));
@@ -329,24 +317,32 @@ implements Tool {
 
     @Override
     public void postApplication() {
-        // Don't need this
+        Emitter e = Emitters.getInstance().removeEmitter(getContext());
+        try {
+            e.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
     }
 
+    @Override
+    public void preApplication() 
+    throws InstantiationException, IllegalAccessException {
+        try {
+            Emitters.getInstance().registerEmitter(getContext());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
     @Override
     public void postSuperstep() {
         // Don't need this
     }
 
     @Override
-    public void preApplication() 
-    throws InstantiationException, IllegalAccessException {
-
-        //registerAggregator("results", ResultsAggregator.class);
-    }
-
-    @Override
     public void preSuperstep() {
-        //aggregator = (ResultsAggregator) getAggregator("results");
+        // Don't need this
     }
 
     @Override

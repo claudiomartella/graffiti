@@ -17,5 +17,4 @@ public class VertexText {
 		assertEquals(1, edges.size());
 		assertEquals("someId", edges.toArray()[0].toString());
 	}
-	
 }

@@ -28,9 +28,10 @@ import com.google.common.base.Joiner;
 public class LocationStep 
 implements Writable {
 
-    public static final String EMPTY_EDGE = " ";
+    public static final String EMPTY_LABEL = " ";
+    public static final String ANY_LABEL   = "*";
     private ArrayList<Condition> conditions = new ArrayList<Condition>();
-    private String edge = EMPTY_EDGE;
+    private String edge = EMPTY_LABEL;
     private int repeat = -1;
     private boolean isSP = false;
 
@@ -78,7 +79,7 @@ implements Writable {
     public String toString() {
         StringBuffer string = new StringBuffer();
 
-        if (!edge.equals(EMPTY_EDGE)) {
+        if (!edge.equals(EMPTY_LABEL)) {
             string.append(edge);
         } else {
             string.append("<no edge>");
