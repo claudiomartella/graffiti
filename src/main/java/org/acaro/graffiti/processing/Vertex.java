@@ -51,11 +51,6 @@ extends MutableVertex<Text, NullWritable, Text, Message>
 implements Tool {
 
     private static final Logger LOG = Logger.getLogger(Vertex.class);
-    /*
-     * It contains all the outgoing edges. Each entry in the hashmap represents an outgoing label.
-     * Each element of the contained TreeSet are vertices on the other end of an edge with
-     * that label.
-     */
     private final Map<Text, Set<Text>> labelledOutEdgeMap = new HashMap<Text, Set<Text>>();
     private final List<Message> msgList = new ArrayList<Message>();
     private Configuration conf;
@@ -109,7 +104,7 @@ implements Tool {
                 return false;
             }
         }
-
+        
         return true;
     }
 
