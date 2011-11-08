@@ -27,27 +27,29 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.acaro.graffiti.Graffiti;
 import org.acaro.graffiti.query.Condition;
 import org.acaro.graffiti.query.LocationStep;
 import org.acaro.graffiti.query.Query;
 import org.acaro.graffiti.query.QueryParser;
 import org.apache.giraph.graph.GiraphJob;
 import org.apache.giraph.graph.MutableVertex;
+import org.apache.giraph.graph.WorkerContext;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.log4j.Logger;
 
 public class Vertex 
-extends MutableVertex<Text, Query, Text, Message> 
+extends MutableVertex<Text, NullWritable, Text, Message> 
 implements Tool {
 
-    public static final String SOURCE_VX = "source_vertex";
-    public static final String QUERY = "query";
-    public static final String MINWORKERS = "1";
-    public static final String MAXWORKERS = "7";
     private static final Logger LOG = Logger.getLogger(Vertex.class);
     /*
      * It contains all the outgoing edges. Each entry in the hashmap represents an outgoing label.
@@ -58,7 +60,6 @@ implements Tool {
     private final List<Message> msgList = new ArrayList<Message>();
     private Configuration conf;
     private Text vertexId = null;
-    private Query query;
     private boolean halt = false;
     private int numOutEdges; 
 
@@ -66,13 +67,9 @@ implements Tool {
     public void compute(Iterator<Message> messages) 
     throws IOException {
 
-        if (getSuperstep() == 0 && isSource()) {
-            processMessage(new Message(this.query, new ResultSet()));
-        } else {
-            while (messages.hasNext()) {
-                processMessage(messages.next());
-            }
-        }
+    	while (messages.hasNext()) {
+    		processMessage(messages.next());
+    	}
 
         voteToHalt();
     }
@@ -80,7 +77,12 @@ implements Tool {
     private void processMessage(Message message) 
     throws IOException {
 
-        Query query    = message.getQuery();
+        Query query = message.getQuery();
+        
+        if (LOG.isDebugEnabled()) {
+        	LOG.debug(getVertexId() + " received query: " + query);
+        }
+        
         LocationStep l = query.getLocationSteps().firstElement();
         if (checkConditions(l) == false) {
             return;
@@ -129,10 +131,10 @@ implements Tool {
     throws IOException {
 
         r.add(getVertexId());
-        if (label.equals(LocationStep.EMPTY_EDGE)) {
+        if (label.equals(LocationStep.EMPTY)) {
             emit(r);
         } else {
-            if (label.equals("*")) {
+            if (label.equals(LocationStep.ANY)) {
                 for (Text tLabel: getEdgesLabels()) {
                     emitWithLabel(tLabel, new ResultSet(r));
                 }
@@ -165,13 +167,14 @@ implements Tool {
         for (Text t: r) {
             sb.append(t.toString() + " ");
         }
-        
-        LOG.error(sb.toString());
+
+        Emitter emitter = (Emitter) getWorkerContext();
+        emitter.emit(sb.toString());
     }
 
     private void forwardMsg(String label, Message message) {
 
-        if (label.equals("*")) {
+        if (label.equals(LocationStep.ANY)) {
             for (Text tLabel: getEdgesLabels()) {
                 // "clone" it because they go through paths with different labels
                 forwardMsgThroughLabel(tLabel, new Message(message));
@@ -192,12 +195,6 @@ implements Tool {
                 sendMsg(v, message);
             }
         }
-    }
-
-    private boolean isSource() {
-        String source = getContext().getConfiguration().get(SOURCE_VX);
-
-        return source.equals("*") || source.equals(getVertexId());
     }
 
     public Set<Text> getEdgesByLabel(Text label) {
@@ -296,6 +293,10 @@ implements Tool {
     public List<Message> getMsgList() {
         return this.msgList;
     }
+    
+    public void setMsgList(List<Message> msgList) {
+    	this.msgList.addAll(msgList);
+    }
 
     @Override
     public int getNumOutEdges() {
@@ -308,8 +309,8 @@ implements Tool {
     }
 
     @Override
-    public Query getVertexValue() {
-        return this.query;
+    public NullWritable getVertexValue() {
+        return NullWritable.get();
     }
 
     @Override
@@ -328,28 +329,6 @@ implements Tool {
     }
 
     @Override
-    public void postApplication() {
-        // Don't need this
-    }
-
-    @Override
-    public void postSuperstep() {
-        // Don't need this
-    }
-
-    @Override
-    public void preApplication() 
-    throws InstantiationException, IllegalAccessException {
-
-        //registerAggregator("results", ResultsAggregator.class);
-    }
-
-    @Override
-    public void preSuperstep() {
-        //aggregator = (ResultsAggregator) getAggregator("results");
-    }
-
-    @Override
     public void sendMsgToAllEdges(Message m) {
 
         for (Set<Text> labelSet: labelledOutEdgeMap.values()) {
@@ -360,13 +339,82 @@ implements Tool {
     }
 
     @Override
-    public void setVertexValue(Query value) {
-        this.query = value;
+    public void setVertexValue(NullWritable value) {
+    	// just ignore it
     }
 
     @Override
     public void voteToHalt() {
         this.halt = true;
+    }
+    
+	@Override
+	public void initialize(Text vertexId, NullWritable query, Map<Text, Text> edges, List<Message> msgList) {
+		// we don't use this
+	}
+	
+    @SuppressWarnings("rawtypes")
+	public class Emitter extends WorkerContext {
+        
+        private static final String FILENAME = "emitter_";
+        private FSDataOutputStream out;
+
+        @Override
+        public void preApplication() {
+            Context context = getContext();
+            FileSystem fs;
+            
+            try {
+            	
+                fs = FileSystem.get(context.getConfiguration());
+
+                String p = context.getConfiguration().get(Graffiti.OUTPUTDIR);
+                if (p == null) {
+                    throw new IllegalArgumentException(Graffiti.OUTPUTDIR + " undefined!");
+                }
+            
+                Path path = new Path(p);
+                if (!fs.exists(path)) {
+                    throw new IllegalArgumentException(path + " doesn't exist");
+                }
+
+                Path outF = new Path(path, FILENAME + context.getTaskAttemptID());
+                if (fs.exists(outF)) {
+                    throw new IllegalArgumentException(outF + " aready exists");
+                }
+            
+                out = fs.create(outF);
+            } catch (IOException e) {
+                throw new RuntimeException("can't initialize WorkerContext", e);
+            }
+        }
+
+        @Override
+        public void postApplication() {
+            if (out != null) {
+                try {
+                    out.flush();
+                    out.close();
+                } catch (IOException e) {
+                    throw new RuntimeException("can't finalize WorkerContext", e);
+                }
+                out = null;
+            }
+        }
+
+        @Override
+        public void preSuperstep() { }
+
+        @Override
+        public void postSuperstep() { }
+        
+        public void emit(String s) {
+            try {
+                out.writeUTF(s + "\n");
+            } catch (IOException e) {
+                throw new RuntimeException("can't emit", e);
+            }
+        }
     }
 
     /*
@@ -395,12 +443,13 @@ implements Tool {
 
         GiraphJob job = new GiraphJob(getConf(), getClass().getName());
         job.setVertexClass(getClass());
-        job.setVertexInputFormatClass(VertexInputFormat.class);
+        job.setWorkerContextClass(Vertex.Emitter.class);
+        job.setVertexInputFormatClass(GraffitiInputFormat.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
-        job.getConfiguration().set(Vertex.SOURCE_VX, q.getStartNode());
-        job.getConfiguration().set(Vertex.QUERY, args[1]);
+        job.getConfiguration().set(Graffiti.SOURCE_VX, q.getStartNode());
+        job.getConfiguration().set(Graffiti.QUERY, args[1]);
         job.getConfiguration().set(GiraphJob.ZOOKEEPER_LIST, "rose.inf.unibz.it:2181");
-        job.setWorkerConfiguration(Integer.parseInt(MINWORKERS), Integer.parseInt(MAXWORKERS), 100.0f);
+        job.setWorkerConfiguration(7, 7, 100.0f);
         
         if (job.run(true) == true) {
             return 0;
