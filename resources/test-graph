@@ -1,4 +1,4 @@
-["Claudio", [ [ "friends", "Marco" ], [ "friends", "Gianni" ] ]
-["Roberto", [ [ "friends", "Luca" ] ] ]
+["Claudio", [ [ "friends", "Marco" ], [ "friends", "Gianni" ] ] ]
 ["Gianni", [ [ "likes", "Anna" ] ] ]
-["Luca", [ [ "likes", "Anna] ] ]
+["Luca", [ [ "likes", "Anna"] ] ]
+["Roberto", [ [ "friends", "Luca" ] ] ]

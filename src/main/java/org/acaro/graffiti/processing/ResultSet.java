@@ -76,4 +76,14 @@ implements Writable, Iterable<Text> {
     public Iterator<Text> iterator() {
         return results.iterator();
     }
+    
+    public String toString() {
+    	StringBuilder builder = new StringBuilder();
+    	
+    	for (Text result: results) {
+    		builder.append(result.toString() + " ");
+    	}
+    	
+    	return builder.toString();
+    }
 }

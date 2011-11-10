@@ -19,16 +19,17 @@ import java.io.IOException;
 
 import org.apache.giraph.graph.VertexReader;
 import org.apache.giraph.lib.TextVertexInputFormat;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 public class GraffitiInputFormat 
-extends TextVertexInputFormat<Text, NullWritable, Text, Message> {
+extends TextVertexInputFormat<Text, IntWritable, Text, Message> {
 
     @Override
-    public VertexReader<Text, NullWritable, Text, Message> createVertexReader(
+    public VertexReader<Text, IntWritable, Text, Message> createVertexReader(
             InputSplit split, TaskAttemptContext ctx) 
             throws IOException {
         return new org.acaro.graffiti.processing.GraffitiReader(textInputFormat.createRecordReader(split, ctx));

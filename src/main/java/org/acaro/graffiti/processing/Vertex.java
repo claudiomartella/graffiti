@@ -39,15 +39,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 public class Vertex 
-extends MutableVertex<Text, NullWritable, Text, Message> 
+extends MutableVertex<Text, IntWritable, Text, Message> 
 implements Tool {
 
     private static final Logger LOG = Logger.getLogger(Vertex.class);
@@ -62,6 +64,8 @@ implements Tool {
     public void compute(Iterator<Message> messages) 
     throws IOException {
 
+    	System.out.println(this.toString());
+    	
     	while (messages.hasNext()) {
     		processMessage(messages.next());
     	}
@@ -69,14 +73,12 @@ implements Tool {
         voteToHalt();
     }
 
-    private void processMessage(Message message) 
+	private void processMessage(Message message) 
     throws IOException {
 
         Query query = message.getQuery();
         
-        if (LOG.isDebugEnabled()) {
-        	LOG.debug(getVertexId() + " received query: " + query);
-        }
+        LOG.debug(getVertexId() + " received query: " + query);
         
         LocationStep l = query.getLocationSteps().firstElement();
         if (checkConditions(l) == false) {
@@ -157,14 +159,8 @@ implements Tool {
     private void emit(ResultSet r) 
     throws IOException {
         
-        StringBuffer sb = new StringBuffer();
-        
-        for (Text t: r) {
-            sb.append(t.toString() + " ");
-        }
-
         Emitter emitter = (Emitter) getWorkerContext();
-        emitter.emit(sb.toString());
+        emitter.emit(r.toString());
     }
 
     private void forwardMsg(String label, Message message) {
@@ -304,8 +300,8 @@ implements Tool {
     }
 
     @Override
-    public NullWritable getVertexValue() {
-        return NullWritable.get();
+    public IntWritable getVertexValue() {
+        return new IntWritable(0);
     }
 
     @Override
@@ -318,6 +314,14 @@ implements Tool {
         return this.halt;
     }
 
+    @Override
+    public boolean isHalted(boolean state) {
+    	boolean oldState = this.halt;
+    	this.halt = state;
+    	
+    	return oldState;
+    }
+    
     @Override
     public Iterator<Text> iterator() {
         throw new UnsupportedOperationException("iterator should not be called");
@@ -334,7 +338,7 @@ implements Tool {
     }
 
     @Override
-    public void setVertexValue(NullWritable value) {
+    public void setVertexValue(IntWritable value) {
     	// just ignore it
     }
 
@@ -344,12 +348,34 @@ implements Tool {
     }
     
 	@Override
-	public void initialize(Text vertexId, NullWritable query, Map<Text, Text> edges, List<Message> msgList) {
+	public void initialize(Text vertexId, IntWritable value, Map<Text, Text> edges, List<Message> msgList) {
 		// we don't use this
 	}
 	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		
+		builder.append("superstep=" + getSuperstep());
+		builder.append(" vertexid=" + getVertexId().toString() + "\n");
+		
+		for (Entry<Text, Set<Text>> edge: labelledOutEdgeMap.entrySet()) {
+			builder.append(edge.getKey().toString() + ":");
+			for (Text endpoint: edge.getValue()) {
+				builder.append(" " + endpoint.toString());
+			}
+			builder.append("\n");
+		}
+		
+		builder.append("Messages:\n");
+    	for (Message message: msgList) {
+    		builder.append(message.toString() + "\n");
+    	}
+		
+		return builder.toString();
+	}
+	
     @SuppressWarnings("rawtypes")
-	public class Emitter extends WorkerContext {
+	public static class Emitter extends WorkerContext {
         
         private static final String FILENAME = "emitter_";
         private FSDataOutputStream out;
@@ -370,7 +396,7 @@ implements Tool {
             
                 Path path = new Path(p);
                 if (!fs.exists(path)) {
-                    throw new IllegalArgumentException(path + " doesn't exist");
+                	fs.mkdirs(path); // in case create output dir
                 }
 
                 Path outF = new Path(path, FILENAME + context.getTaskAttemptID());
@@ -429,27 +455,28 @@ implements Tool {
     public int run(String[] args) 
     throws Exception {
 
-        if (args.length != 2) {
-            throw new IllegalArgumentException(
-            "run: Must have 2 arguments <input path> <query>");
-        }
-
-        Query q = new QueryParser(args[1]).parse();
-
+        Query q = new QueryParser(args[2]).parse();
         GiraphJob job = new GiraphJob(getConf(), getClass().getName());
         job.setVertexClass(getClass());
-        job.setWorkerContextClass(Vertex.Emitter.class);
+        job.setWorkerContextClass(Emitter.class);
         job.setVertexInputFormatClass(GraffitiInputFormat.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
         job.getConfiguration().set(Graffiti.SOURCE_VX, q.getStartNode());
-        job.getConfiguration().set(Graffiti.QUERY, args[1]);
-        job.getConfiguration().set(GiraphJob.ZOOKEEPER_LIST, "rose.inf.unibz.it:2181");
-        job.setWorkerConfiguration(7, 7, 100.0f);
-        
-        if (job.run(true) == true) {
-            return 0;
+        job.getConfiguration().set(Graffiti.QUERY, args[2]);
+        job.getConfiguration().set(Graffiti.OUTPUTDIR, args[1]);
+        job.getConfiguration().setInt(GiraphJob.CHECKPOINT_FREQUENCY, 0);
+        //job.getConfiguration().set(GiraphJob.ZOOKEEPER_LIST, "rose.inf.unibz.it:2181");
+        job.setWorkerConfiguration(1, 1, 100.0f);
+
+        if (job.run(true)) {
+        	return 0;
         } else {
-            return -1;
+        	return -1;
         }
     }
+
+    public static void main(String[] args) 
+    throws Exception {
+    	System.exit(ToolRunner.run(new Vertex(), args));
+    }    
 }

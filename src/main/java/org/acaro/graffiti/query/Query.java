@@ -79,7 +79,7 @@ implements Writable {
     }
 
     public String toString() {
-        StringBuffer string = new StringBuffer(startNode);
+        StringBuilder string = new StringBuilder(startNode);
 
         string.append(" :: ");
         string.append(Joiner.on(" > ").skipNulls().join(locationSteps));

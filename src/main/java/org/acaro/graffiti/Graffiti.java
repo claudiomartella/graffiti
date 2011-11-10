@@ -16,6 +16,10 @@ public class Graffiti {
     }
     
 	public static void main(String[] args) throws Exception {
+        if (args.length != 3) {
+            throw new IllegalArgumentException("Graffiti: Must have 2 arguments <input path> <output path> <query>");
+        }
+		
         System.exit(ToolRunner.run(new Vertex(), args));
     }
 }

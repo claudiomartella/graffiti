@@ -65,4 +65,13 @@ implements Writable {
         this.query.write(output);
         this.results.write(output);
     }
+    
+    public String toString() {
+    	StringBuilder builder = new StringBuilder();
+    	
+    	builder.append(query.toString() + "\n");
+    	builder.append(results.toString());
+    	
+    	return builder.toString();
+    }
 }

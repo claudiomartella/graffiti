@@ -26,35 +26,27 @@ import org.acaro.graffiti.query.QueryParser;
 import org.antlr.runtime.RecognitionException;
 import org.apache.giraph.graph.BasicVertex;
 import org.apache.giraph.lib.TextVertexInputFormat.TextVertexReader;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.json.JSONArray;
 import org.json.JSONException;
 
 public class GraffitiReader 
-extends TextVertexReader<Text, NullWritable, Text, Message> {
+extends TextVertexReader<Text, IntWritable, Text, Message> {
 
-    private List<Message> msgList = new ArrayList<Message>(1);
+    private List<Message> msgList;
 
-    public GraffitiReader(RecordReader<LongWritable, Text> arg) {
-        super(arg);
-
-        try {
-
-            String queryString = getContext().getConfiguration().get(Graffiti.QUERY);
-            Query query = new QueryParser(queryString).parse();
-            msgList.add(new Message(query, new ResultSet()));
-
-        } catch (RecognitionException e) {
-            e.printStackTrace();
-            throw new ParseError("cannot parse query ");
-        }
+    public GraffitiReader(RecordReader<LongWritable, Text> recordReader) {
+        super(recordReader);
     }
 
 	@Override
-	public BasicVertex<Text, NullWritable, Text, Message> getCurrentVertex()
+	public BasicVertex<Text, IntWritable, Text, Message> getCurrentVertex()
 	throws IOException, InterruptedException {
 		
 		Vertex vertex = new Vertex();
@@ -69,7 +61,7 @@ extends TextVertexReader<Text, NullWritable, Text, Message> {
             
             for (int i = 0; i < jsonEdgeArray.length(); ++i) {
                 JSONArray jsonEdge = jsonEdgeArray.getJSONArray(i);
-                vertex.addEdge(new Text(jsonEdge.getString(0)), new Text(jsonEdge.getString(1)));
+                vertex.addEdge(new Text(jsonEdge.getString(1)), new Text(jsonEdge.getString(0)));
             }
         } catch (JSONException e) {
             throw new IllegalArgumentException(
@@ -82,5 +74,24 @@ extends TextVertexReader<Text, NullWritable, Text, Message> {
 	@Override
 	public boolean nextVertex() throws IOException, InterruptedException {
 		return getRecordReader().nextKeyValue();
+	}
+	
+    @Override
+    public void initialize(InputSplit inputSplit,
+                           TaskAttemptContext context)
+                           throws IOException, InterruptedException {
+    	super.initialize(inputSplit, context);
+    	
+		try {
+
+            String queryString = context.getConfiguration().get(Graffiti.QUERY);
+            Query query = new QueryParser(queryString).parse();
+            msgList = new ArrayList<Message>(1);
+            msgList.add(new Message(query, new ResultSet()));
+
+        } catch (RecognitionException e) {
+            e.printStackTrace();
+            throw new ParseError("cannot parse query ");
+        }
 	}
 }
