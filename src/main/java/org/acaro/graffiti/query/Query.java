@@ -18,7 +18,8 @@ package org.acaro.graffiti.query;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import org.apache.hadoop.io.Writable;
 
@@ -27,24 +28,24 @@ import com.google.common.base.Joiner;
 public class Query 
 implements Writable {
 
-    private Stack<LocationStep> locationSteps;
+    private Deque<LocationStep> locationSteps;
     private EndNodeFunction enf;
     private String startNode;
 
     public Query() { }
 
-    public Query(String startNode, Stack<LocationStep> locationSteps) {
+    public Query(String startNode, Deque<LocationStep> locationSteps) {
         setStartNode(startNode);
         setLocationSteps(locationSteps);
     }
 
-    public Query(String startNode, Stack<LocationStep> locationSteps, EndNodeFunction func) {
+    public Query(String startNode, Deque<LocationStep> locationSteps, EndNodeFunction func) {
         this(startNode, locationSteps);
         setEndNodeFunction(func);
     }
 
     public Query(Query other) {
-        this.locationSteps = new Stack<LocationStep>();
+        this.locationSteps = new ArrayDeque<LocationStep>();
         this.locationSteps.addAll(other.getLocationSteps());
         this.startNode     = other.getStartNode();
         this.enf           = other.getEndNodeFunction();
@@ -58,11 +59,11 @@ implements Writable {
         return this.startNode;
     }
 
-    public void setLocationSteps(Stack<LocationStep> locationSteps) {
+    public void setLocationSteps(Deque<LocationStep> locationSteps) {
         this.locationSteps = locationSteps;
     }
 
-    public Stack<LocationStep> getLocationSteps() {
+    public Deque<LocationStep> getLocationSteps() {
         return this.locationSteps;
     }
 
@@ -94,7 +95,7 @@ implements Writable {
     public void readFields(DataInput input) 
     throws IOException {
     
-        Stack<LocationStep> locationSteps = new Stack<LocationStep>();
+        Deque<LocationStep> locationSteps = new ArrayDeque<LocationStep>();
 
         int n = input.readInt();
         for (int i = 0; i < n; i++) {

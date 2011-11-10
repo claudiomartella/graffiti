@@ -40,7 +40,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -80,7 +79,7 @@ implements Tool {
         
         LOG.debug(getVertexId() + " received query: " + query);
         
-        LocationStep l = query.getLocationSteps().firstElement();
+        LocationStep l = query.getLocationSteps().element();
         if (checkConditions(l) == false) {
             return;
         }
@@ -114,6 +113,9 @@ implements Tool {
 
         Query newQuery = new Query(old);
         LocationStep l = newQuery.getLocationSteps().pop();
+        
+        System.out.println("popped: " + l.toString());
+        
         int rp = l.getRepeat();
         if (rp > 0) {
             LocationStep newL = new LocationStep(l);

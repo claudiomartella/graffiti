@@ -15,7 +15,8 @@
 
 package org.acaro.graffiti.query;
 
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -50,7 +51,7 @@ public class QueryParser {
 	}
 	
 	private Query parseQuery(CommonTree ast) {
-		Stack<LocationStep> locationSteps = new Stack<LocationStep>();
+		Deque<LocationStep> locationSteps = new ArrayDeque<LocationStep>();
 		String startNode     = null;
 		EndNodeFunction func = null;
 		
@@ -67,7 +68,7 @@ public class QueryParser {
 			case RDFPathLexer.LOCATIONSTEP:
 			{	
 				LocationStep l = parseLocationStep(treeChild);
-				locationSteps.add(l);
+				locationSteps.push(l);
 				break;
 			}	
 			case RDFPathLexer.ENDNODEFUNCTION:
@@ -86,7 +87,7 @@ public class QueryParser {
 		}
 		
 		if (next != null) {
-			locationSteps.add(next);
+			locationSteps.push(next);
 		}
 		
 		return (func == null) ? new Query(startNode, locationSteps) : 
