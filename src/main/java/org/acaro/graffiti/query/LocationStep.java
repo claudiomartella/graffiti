@@ -122,6 +122,11 @@ implements Writable {
                 c = new Subquery();
                 break;
             }
+            case HASEDGE:
+            {
+            	c = new HasEdge();
+            	break;
+            }
             default:
                 throw new RuntimeException("Unknown Condition type at readFields!");
             }

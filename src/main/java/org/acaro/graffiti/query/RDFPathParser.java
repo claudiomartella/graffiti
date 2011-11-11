@@ -15,21 +15,15 @@
 
 package org.acaro.graffiti.query;
 
-import org.antlr.runtime.BaseRecognizer;
-import org.antlr.runtime.BitSet;
-import org.antlr.runtime.DFA;
-import org.antlr.runtime.NoViableAltException;
-import org.antlr.runtime.Parser;
-import org.antlr.runtime.ParserRuleReturnScope;
-import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.RecognizerSharedState;
-import org.antlr.runtime.Token;
-import org.antlr.runtime.TokenStream;
-import org.antlr.runtime.tree.CommonTreeAdaptor;
-import org.antlr.runtime.tree.RewriteEarlyExitException;
-import org.antlr.runtime.tree.RewriteRuleSubtreeStream;
-import org.antlr.runtime.tree.RewriteRuleTokenStream;
-import org.antlr.runtime.tree.TreeAdaptor;
+// $ANTLR 3.3 Nov 30, 2010 12:45:30 /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g 2011-11-11 17:19:50
+
+import org.antlr.runtime.*;
+import java.util.Stack;
+import java.util.List;
+import java.util.ArrayList;
+
+
+import org.antlr.runtime.tree.*;
 
 public class RDFPathParser extends Parser {
     public static final String[] tokenNames = new String[] {
@@ -213,7 +207,7 @@ public class RDFPathParser extends Parser {
 
 
             // AST REWRITE
-            // elements: locationStep, startNode, endNodeFunction
+            // elements: endNodeFunction, locationStep, startNode
             // token labels: 
             // rule labels: retval
             // token list labels: 
@@ -516,7 +510,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: condition, shortestPath, edge
+                    // elements: shortestPath, condition, edge
                     // token labels: 
                     // rule labels: retval
                     // token list labels: 
@@ -904,7 +898,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: v, fn
+                    // elements: fn, v
                     // token labels: v, fn
                     // rule labels: retval
                     // token list labels: 
@@ -949,7 +943,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: v, fn
+                    // elements: fn, v
                     // token labels: v, fn
                     // rule labels: retval
                     // token list labels: 
@@ -994,7 +988,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: v, fn
+                    // elements: fn, v
                     // token labels: v, fn
                     // rule labels: retval
                     // token list labels: 
@@ -1039,7 +1033,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: fn, v
+                    // elements: v, fn
                     // token labels: v, fn
                     // rule labels: retval
                     // token list labels: 
@@ -1084,7 +1078,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: fn, v
+                    // elements: v, fn
                     // token labels: v, fn
                     // rule labels: retval
                     // token list labels: 
@@ -1713,7 +1707,7 @@ public class RDFPathParser extends Parser {
 
 
                     // AST REWRITE
-                    // elements: v, fn
+                    // elements: fn, v
                     // token labels: v, fn
                     // rule labels: retval
                     // token list labels: 

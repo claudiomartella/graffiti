@@ -68,7 +68,7 @@ public class QueryParser {
 			case RDFPathLexer.LOCATIONSTEP:
 			{	
 				LocationStep l = parseLocationStep(treeChild);
-				locationSteps.push(l);
+				locationSteps.add(l);
 				break;
 			}	
 			case RDFPathLexer.ENDNODEFUNCTION:
@@ -87,7 +87,7 @@ public class QueryParser {
 		}
 		
 		if (next != null) {
-			locationSteps.push(next);
+			locationSteps.add(next);
 		}
 		
 		return (func == null) ? new Query(startNode, locationSteps) : 
@@ -112,6 +112,7 @@ public class QueryParser {
 			{	
 				String edge = treeChild.getChild(0).getText();
 				current.setEdge(edge);
+				current.addCondition(new HasEdge(edge));
 				break;
 			}	
 			case RDFPathLexer.CONDITION:

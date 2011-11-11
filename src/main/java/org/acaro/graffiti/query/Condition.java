@@ -22,7 +22,7 @@ public abstract class Condition
 implements Writable {
 
     public enum FUNCTION { MIN, MAX, EQUALS, PREFIX, SUFFIX };
-	public enum TYPE { SUBQUERY, FILTER };
+	public enum TYPE { SUBQUERY, FILTER, HASEDGE };
 
 	protected FUNCTION parseFunction(String func) {
 		if (func.equals("MIN(")) {

@@ -20,7 +20,6 @@ import java.io.IOException;
 import org.apache.giraph.graph.VertexReader;
 import org.apache.giraph.lib.TextVertexInputFormat;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;

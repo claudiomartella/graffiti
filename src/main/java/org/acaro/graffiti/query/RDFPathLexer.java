@@ -15,14 +15,12 @@
 
 package org.acaro.graffiti.query;
 
-import org.antlr.runtime.BaseRecognizer;
-import org.antlr.runtime.CharStream;
-import org.antlr.runtime.DFA;
-import org.antlr.runtime.EarlyExitException;
-import org.antlr.runtime.Lexer;
-import org.antlr.runtime.MismatchedSetException;
-import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.RecognizerSharedState;
+// $ANTLR 3.3 Nov 30, 2010 12:45:30 /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g 2011-11-11 17:19:51
+
+import org.antlr.runtime.*;
+import java.util.Stack;
+import java.util.List;
+import java.util.ArrayList;
 
 public class RDFPathLexer extends Lexer {
     public static final int EOF=-1;
@@ -514,8 +512,8 @@ public class RDFPathLexer extends Lexer {
         try {
             int _type = TEXTVALUE;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:90:2: ( ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' )* )
-            // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:90:4: ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' )*
+            // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:90:2: ( ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | ':' )* )
+            // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:90:4: ( 'a' .. 'z' | 'A' .. 'Z' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | ':' )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -526,13 +524,13 @@ public class RDFPathLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:90:23: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' )*
+            // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:90:23: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | ':' )*
             loop1:
             do {
                 int alt1=2;
                 int LA1_0 = input.LA(1);
 
-                if ( ((LA1_0>='0' && LA1_0<='9')||(LA1_0>='A' && LA1_0<='Z')||(LA1_0>='a' && LA1_0<='z')) ) {
+                if ( ((LA1_0>='0' && LA1_0<=':')||(LA1_0>='A' && LA1_0<='Z')||(LA1_0>='a' && LA1_0<='z')) ) {
                     alt1=1;
                 }
 
@@ -541,7 +539,7 @@ public class RDFPathLexer extends Lexer {
             	case 1 :
             	    // /Users/hammer/TIS/java-hacking/graffiti/resources/RDFPath.g:
             	    {
-            	    if ( (input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
+            	    if ( (input.LA(1)>='0' && input.LA(1)<=':')||(input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
             	        input.consume();
 
             	    }
