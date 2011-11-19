@@ -32,21 +32,22 @@ public class GraffitiSp2bDatasetWriter {
 		return literal.substring(1, end);
 	}
 	
-	public static class MyMapper extends Mapper<LongWritable, Text, Text, Text> {
+	public static class MyMapper extends Mapper<LongWritable, Text, Text, Edge> {
 	
 		@Override
 		public void map(LongWritable key, Text value, Context context) 
 		throws IOException, InterruptedException {
 
 			String line = value.toString();
-			String[] elements = line.split(" ", 2);
-			if (elements.length != 2) {
+			String[] elements = line.split(" ");
+			if (elements.length != 3) {
 				Log.warn("Unsplittable line, ignoring: " + line);
 				return;
 			}
 
-			String vertex = elements[0];
-			String edge   = elements[1];
+			String vertex   = elements[0];
+			String edge     = elements[1];
+			String endpoint = elements[2].substring(0, elements[2].length()-1);
 			
 			if (vertex.startsWith("_:")) {
 				vertex = fromBNode(vertex);
@@ -54,15 +55,24 @@ public class GraffitiSp2bDatasetWriter {
 			if (!vertex.startsWith("<")) {
 				return;
 			}
+			if (endpoint.startsWith("_:")) {
+				endpoint = fromBNode(endpoint);
+			} else if (endpoint.startsWith("\"")) {
+				endpoint = fromLiteral(endpoint);
+			}
+			context.write(new Text(vertex), new Edge(edge, endpoint));
 			
-			context.write(new Text(vertex), new Text(edge));
+			if (!endpoint.startsWith("<")) {
+				return;
+			}
+			context.write(new Text(endpoint), new Edge("i_" + edge, vertex));
 		}
 	}
 	
-	public static class MyReducer extends Reducer<Text, Text, NullWritable, Text> {
+	public static class MyReducer extends Reducer<Text, Edge, NullWritable, Text> {
 
 		@Override
-		public void reduce(Text vertex, Iterable<Text> edges, Context context) 
+		public void reduce(Text vertex, Iterable<Edge> edges, Context context) 
 		throws IOException, InterruptedException {
 			
 			StringBuilder builder = new StringBuilder();
@@ -72,22 +82,11 @@ public class GraffitiSp2bDatasetWriter {
 			       .append("\", [ ");
 			
 			boolean first = true;
-			for (Text edge: edges) {
+			for (Edge edge: edges) {
 
-				String[] elements = edge.toString().split(" ");
-				if (elements.length != 2) {
-					Log.warn("Malformed edge, ignoring: " + edge.toString());
-					continue;
-				}
+				String label = edge.getLabel();
+				String endP  = edge.getEndpoint();
 				
-				String label = elements[0];
-				String endP  = elements[1].substring(0, elements[1].length()-1); // ending .
-				
-				if (endP.startsWith("_:")) {
-					endP = fromBNode(endP);
-				} else if (endP.startsWith("\"")) {
-					endP = fromLiteral(endP);
-				}
 				if (!first) {
 					builder.append(", ");
 				} else {
@@ -125,7 +124,7 @@ public class GraffitiSp2bDatasetWriter {
         job.setJobName("GraffitiDatasetWriter");
         
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(Text.class);
+        job.setMapOutputValueClass(Edge.class);
 
         job.setOutputKeyClass(NullWritable.class);
         job.setOutputValueClass(Text.class);

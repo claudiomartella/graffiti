@@ -78,7 +78,7 @@ extends Condition {
             try {
                 int v = Integer.parseInt(value);
                 int a = Integer.parseInt(argument);
-                ret = (v > a) ? true : false;
+                ret = v <= a;
             } catch (NumberFormatException e) { }
             break;
         }
@@ -87,7 +87,7 @@ extends Condition {
             try {
                 int v = Integer.parseInt(value);
                 int a = Integer.parseInt(argument);
-                ret = (v < a) ? true : false;
+                ret = v >= a;
             } catch (NumberFormatException e) { }
             break;
         }

@@ -32,8 +32,8 @@ import org.acaro.graffiti.query.Condition;
 import org.acaro.graffiti.query.LocationStep;
 import org.acaro.graffiti.query.Query;
 import org.acaro.graffiti.query.QueryParser;
+import org.apache.giraph.graph.BasicVertex;
 import org.apache.giraph.graph.GiraphJob;
-import org.apache.giraph.graph.MutableVertex;
 import org.apache.giraph.graph.WorkerContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -48,7 +48,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 public class Vertex 
-extends MutableVertex<Text, IntWritable, Text, Message> 
+extends BasicVertex<Text, IntWritable, Text, Message> 
 implements Tool {
 
     private static final Logger LOG = Logger.getLogger(Vertex.class);
@@ -63,7 +63,7 @@ implements Tool {
     public void compute(Iterator<Message> messages) 
     throws IOException {
 
-    	System.out.println(this.toString());
+    	//System.out.println(this.toString());
     	
     	while (messages.hasNext()) {
     		processMessage(messages.next());
@@ -76,9 +76,6 @@ implements Tool {
     throws IOException {
 
         Query query = message.getQuery();
-        
-        LOG.debug(getVertexId() + " received query: " + query);
-        
         LocationStep l = query.getLocationSteps().element();
         if (checkConditions(l) == false) {
             return;
@@ -113,8 +110,6 @@ implements Tool {
 
         Query newQuery = new Query(old);
         LocationStep l = newQuery.getLocationSteps().pop();
-        
-        System.out.println("popped: " + l.toString());
         
         int rp = l.getRepeat();
         if (rp > 0) {
@@ -250,7 +245,6 @@ implements Tool {
         out.writeBoolean(halt);
     }
 
-    @Override
     public boolean addEdge(Text vID, Text label) {
 
         Set<Text> set = labelledOutEdgeMap.get(label);
@@ -267,12 +261,6 @@ implements Tool {
         return ret;
     }
 
-    @Override
-    public Text removeEdge(Text vID) {
-        throw new UnsupportedOperationException("removeEdge should not be called");
-    }
-
-    @Override
     public void setVertexId(Text vID) {
         this.vertexId = vID;
     }

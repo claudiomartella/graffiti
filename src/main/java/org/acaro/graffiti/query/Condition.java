@@ -36,7 +36,7 @@ implements Writable {
 		} else if (func.equals("EQUALS")) {
 			return FUNCTION.EQUALS;
 		} else {
-			throw new ParseError("Unknown EndNodeFunction " + func);
+			throw new ParseError("Unknown function " + func);
 		}
 	}
 	

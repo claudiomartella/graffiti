@@ -18,8 +18,9 @@ package org.acaro.graffiti.processing;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
-import java.util.Stack;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -33,21 +34,21 @@ import org.apache.hadoop.io.Writable;
 public class ResultSet 
 implements Writable, Iterable<Text> {
 
-    private Stack<Text> results = new Stack<Text>();    
+    private Deque<Text> results = new ArrayDeque<Text>();    
 
     public ResultSet() { }
     
-    protected ResultSet(Stack<Text> results) {
+    protected ResultSet(Deque<Text> results) {
         this.results = results;
     }
 
     public ResultSet(ResultSet other) {
-        this.results = new Stack<Text>();
+        this.results = new ArrayDeque<Text>();
         this.results.addAll(other.results);
     }
 
-    public Text add(Text result) {
-        return results.push(result);
+    public void add(Text result) {
+        results.add(result);
     }
     
     @Override
